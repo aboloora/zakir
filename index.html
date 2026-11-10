@@ -428,6 +428,8 @@
   ];
   var STEPS = ['الدخول', 'الموضوع', 'الصعوبة', 'الأسئلة'];
   var USER_KEY = 'zakir.page.user';
+  // ضع هنا رابط Google Apps Script (Web app URL) الذي ينتهي بـ /exec
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbxIWrf4bhfGGJfp-aSLI9pWG-cYKtqhWJE1PAKbY0GXZ94Jd7Rutr8guTGM24oavpuD/exec';
   var app = document.getElementById('zakir-app');
   var state = { user: loadUser(), topic: null, level: null };
 
@@ -439,6 +441,18 @@
       if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
       else localStorage.removeItem(USER_KEY);
     } catch (error) { /* The quiz still works for this visit without saved data. */ }
+  }
+  // يرسل الاسم والبريد إلى Google Sheet. لا يوقف الاختبار إذا فشل الإرسال.
+  function sendToSheet(user) {
+    if (!/^https:\/\/script\.google\.com\//.test(SHEET_URL)) return;
+    try {
+      fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ name: user.name, email: user.email, page: location.href })
+      }).catch(function () {});
+    } catch (error) { /* ignore */ }
   }
 
   function el(tag, className, text) {
@@ -538,11 +552,12 @@
       if (emailError) { email.input.focus(); return; }
       state.user = { name: nameValue, email: emailValue };
       saveUser(state.user);
+      sendToSheet(state.user);
       showTopics();
     }
 
     card.appendChild(button('z-btn z-primary z-block', 'دخول', submit));
-    card.appendChild(el('p', 'z-hint', 'يُحفظ الاسم والبريد على هذا الجهاز فقط ولا يُرسلان إلى أي خادم.'));
+    card.appendChild(el('p', 'z-hint', 'يُسجَّل الاسم والبريد لدى إدارة الموقع لمتابعة المشاركين.'));
     root.appendChild(card);
   }
 
