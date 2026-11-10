@@ -1,133 +1,826 @@
-// الصق هذا الكود في: Google Sheet > الإضافات (Extensions) > Apps Script
-// بدّل الكود القديم بهذا بالكامل.
-const SHEET_ID = '1YZ4MgpS0gCsVknMn-0cG07I_-jBFNuC5VwU-2IN0RPM';
-const RESULTS_SHEET = 'النتائج';
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
- 
-// شغّل هذه الدالة مرة واحدة من المحرر لمنح صلاحيات الجدول والبريد.
-function authorize() {
-  SpreadsheetApp.openById(SHEET_ID);
-  Logger.log('Remaining emails today: ' + MailApp.getRemainingDailyQuota());
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Zakir quiz: paste this whole block into your page's HTML. It needs no server or API key. -->
+<div id="zakir-app" lang="ar" dir="rtl"></div>
+
+<style>
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap");
+#zakir-app {
+  --z-bg: #f4f1ea; --z-surface: #fffdf8; --z-ink: #1c2b33; --z-muted: #5c6b72; --z-line: #dcd6c8;
+  --z-accent: #0f5e63; --z-soft: #dcecea; --z-correct: #17693d; --z-correct-soft: #e0f2e6;
+  --z-wrong: #a83232; --z-wrong-soft: #fae6e4; --z-amber: #8a5a0b;
+  background: var(--z-bg); color: var(--z-ink); padding: 1rem; border-radius: 8px;
+  font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; font-size: 16px; line-height: 1.65; text-align: start;
 }
- 
-function doGet(e) {
-  const p = (e && e.parameter) || {};
-  if (p.action === 'history') {
-    const email = clean_(p.email, 200).toLowerCase();
-    if (!EMAIL_RE.test(email)) return json_({ ok: false, error: 'bad email' });
-    return json_(history_(email, isRegistered_(email)));
-  }
-  return json_({ ok: true });
+#zakir-app * { box-sizing: border-box; }
+#zakir-app h1, #zakir-app h2, #zakir-app p { margin: 0; padding: 0; color: inherit; font-family: inherit; }
+#zakir-app h1 { font-size: 1.6rem; line-height: 1.35; font-weight: 700; }
+#zakir-app h2 { font-size: 1.15rem; line-height: 1.4; font-weight: 700; }
+#zakir-app [hidden] { display: none !important; }
+#zakir-app :focus-visible { outline: 3px solid var(--z-accent); outline-offset: 2px; }
+#zakir-app h1:focus { outline: none; }
+#zakir-app .z-inner { max-width: 46rem; margin-inline: auto; }
+#zakir-app .z-muted { color: var(--z-muted); }
+#zakir-app .z-card { background: var(--z-surface); border: 1px solid var(--z-line); border-radius: 8px; padding: 1.25rem; }
+#zakir-app .z-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--z-line); }
+#zakir-app .z-brand { color: var(--z-accent); font-size: 1.35rem; font-weight: 700; }
+#zakir-app .z-steps { display: flex; flex-wrap: wrap; gap: .25rem 1rem; color: var(--z-muted); font-size: .9rem; }
+#zakir-app .z-steps .is-current { color: var(--z-accent); font-weight: 700; }
+#zakir-app .z-steps .is-done { color: var(--z-ink); }
+#zakir-app .z-title { margin-bottom: 1.25rem; }
+#zakir-app .z-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; margin: 0; padding: .5rem 1.25rem; border: 1px solid transparent; border-radius: 6px; font: inherit; font-weight: 500; text-transform: none; cursor: pointer; }
+#zakir-app .z-primary { background: var(--z-accent); color: #fff; }
+#zakir-app .z-primary:hover { filter: brightness(1.12); }
+#zakir-app .z-secondary { background: transparent; border-color: var(--z-accent); color: var(--z-accent); }
+#zakir-app .z-secondary:hover { background: var(--z-soft); }
+#zakir-app .z-ghost { min-height: 2.25rem; padding: .25rem .75rem; background: transparent; color: var(--z-muted); font-size: .9rem; }
+#zakir-app .z-ghost:hover { background: var(--z-soft); color: var(--z-ink); }
+#zakir-app .z-link { display: inline-block; margin: 0 0 1rem; padding: 0; background: none; border: 0; color: var(--z-accent); font: inherit; font-size: .95rem; text-decoration: underline; cursor: pointer; }
+#zakir-app .z-login { max-width: 26rem; margin: 1.5rem auto; }
+#zakir-app .z-login h1 { margin-bottom: .35rem; }
+#zakir-app .z-login > p { margin-bottom: 1.25rem; }
+#zakir-app .z-field { margin-bottom: 1rem; }
+#zakir-app .z-field label { display: block; margin-bottom: .35rem; font-weight: 500; }
+#zakir-app .z-field input { display: block; width: 100%; min-height: 2.75rem; margin: 0; padding: .5rem .75rem; background: var(--z-bg); color: var(--z-ink); border: 1px solid var(--z-line); border-radius: 6px; font: inherit; }
+#zakir-app .z-field input[aria-invalid="true"] { border-color: var(--z-wrong); }
+#zakir-app .z-error { margin-top: .3rem; color: var(--z-wrong); font-size: .9rem; }
+#zakir-app .z-block { width: 100%; }
+#zakir-app .z-hint { margin-top: .9rem; color: var(--z-muted); font-size: .85rem; }
+#zakir-app .z-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+#zakir-app .z-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+#zakir-app .z-center { justify-content: center; margin-top: 1.25rem; }
+#zakir-app .z-levels { display: grid; gap: .9rem; }
+#zakir-app .z-level { display: grid; grid-template-columns: 6rem 1fr auto; align-items: center; gap: 1rem; width: 100%; margin: 0; background: var(--z-surface); border: 1px solid var(--z-line); border-inline-start: 6px solid var(--z-color); border-radius: 8px; padding: 1.1rem; color: var(--z-ink); font: inherit; text-align: start; cursor: pointer; }
+#zakir-app .z-level:hover { background: var(--z-soft); }
+#zakir-app .z-level-name { font-size: 1.25rem; font-weight: 700; }
+#zakir-app .z-count { color: var(--z-muted); font-size: .88rem; }
+#zakir-app .z-progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; color: var(--z-muted); font-size: .92rem; }
+#zakir-app .z-bar { height: 6px; margin: .5rem 0 1.25rem; background: var(--z-line); border-radius: 3px; overflow: hidden; }
+#zakir-app .z-fill { height: 100%; background: var(--z-accent); }
+#zakir-app .z-stem { margin-bottom: 1.25rem; font-size: 1.2rem; font-weight: 500; line-height: 1.55; overflow-wrap: anywhere; }
+#zakir-app .z-options { display: grid; gap: .6rem; }
+#zakir-app .z-option { display: block; width: 100%; min-height: 3rem; margin: 0; padding: .7rem 1rem; background: transparent; color: var(--z-ink); border: 1px solid var(--z-line); border-radius: 6px; font: inherit; text-align: start; overflow-wrap: anywhere; cursor: pointer; }
+#zakir-app .z-option:hover:not(:disabled) { border-color: var(--z-accent); background: var(--z-soft); }
+#zakir-app .z-option:disabled { color: var(--z-ink); cursor: default; }
+#zakir-app .z-mark { display: block; margin-top: .2rem; font-size: .85rem; font-weight: 700; direction: rtl; text-align: start; }
+#zakir-app .is-correct { background: var(--z-correct-soft); border: 2px solid var(--z-correct); }
+#zakir-app .is-correct .z-mark, #zakir-app .z-text-correct { color: var(--z-correct); }
+#zakir-app .is-wrong { background: var(--z-wrong-soft); border: 2px solid var(--z-wrong); }
+#zakir-app .is-wrong .z-mark, #zakir-app .z-text-wrong { color: var(--z-wrong); }
+#zakir-app .z-feedback { display: grid; gap: .5rem; justify-items: start; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--z-line); }
+#zakir-app .z-note { width: 100%; padding: .6rem .8rem; background: var(--z-soft); border-radius: 6px; font-size: .95rem; overflow-wrap: anywhere; }
+#zakir-app .z-results { text-align: center; }
+#zakir-app .z-score { color: var(--z-accent); font-size: 3.25rem; font-weight: 700; line-height: 1.2; }
+#zakir-app .z-review { display: grid; gap: .75rem; margin-top: 1.5rem; }
+#zakir-app .z-review-stem { margin-bottom: .5rem; font-weight: 500; }
+#zakir-app .z-label { font-size: .85rem; font-weight: 700; }
+#zakir-app .z-history h2 { margin-bottom: .75rem; }
+#zakir-app .z-history-list { display: grid; gap: .5rem; }
+#zakir-app .z-history-item { padding: .6rem .8rem; border: 1px solid var(--z-line); border-radius: 6px; }
+#zakir-app .z-history-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; }
+#zakir-app .z-history-score { color: var(--z-accent); font-weight: 700; }
+#zakir-app .z-history-meta { font-size: .88rem; }
+@media (max-width: 560px) {
+  #zakir-app .z-level { grid-template-columns: 1fr; gap: .25rem; }
 }
- 
-function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const name = clean_(data.name, 200);
-    const email = clean_(data.email, 200).toLowerCase();
-    if (!EMAIL_RE.test(email)) return json_({ ok: false, error: 'bad email' });
- 
-    if (data.action === 'result') {
-      const score = Math.max(0, Math.floor(Number(data.score) || 0));
-      const total = Math.max(1, Math.floor(Number(data.total) || 1));
-      const percent = Math.round(score / total * 100);
-      resultsSheet_().appendRow([new Date(), name, email, clean_(data.topic, 200), clean_(data.level, 50), score, total, percent]);
-      const result = history_(email, true);
-      result.mailed = sendResultEmail_(name, email, data, score, total, percent, result.tests.length);
-      return json_(result);
+</style>
+
+<script>
+(function () {
+  // To add an article, add one more object to this list. correct_index counts from 0.
+  var TOPICS = [{
+    id: 'sle',
+    title: 'Systemic Lupus Erythematosus (SLE)',
+    levels: {
+      easy: [
+        { question: 'What is the best screening test for SLE?', options: ['ANA', 'Anti-Smith', 'Anti-dsDNA', 'Anti-histone'], correct_index: 0, explanation: 'ANA is the most sensitive test, so it is used for screening.', source_quote: 'ANA: Most sensitive - screening test' },
+        { question: 'Which antibody is the most specific for SLE?', options: ['Anti-Smith', 'ANA', 'Anti-dsDNA', 'Anti-Ro (SSA)'], correct_index: 0, explanation: 'Anti-Smith is the most specific antibody, although its sensitivity is low.', source_quote: 'Anti-Smith: Most specific; low sensitivity' },
+        { question: 'Which drug is recommended for all SLE patients unless contraindicated?', options: ['Hydroxychloroquine', 'Methotrexate', 'Belimumab', 'Cyclophosphamide'], correct_index: 0, explanation: 'Hydroxychloroquine reduces flares, thrombosis, organ damage and mortality.', source_quote: 'All patients: Hydroxychloroquine (unless contraindicated)' },
+        { question: 'What is the most common constitutional symptom of SLE?', options: ['Fatigue', 'Fever without infection', 'Weight loss', 'Lymphadenopathy'], correct_index: 0, explanation: 'The review names fatigue as the most common constitutional finding.', source_quote: 'Fatigue (most common), fever without infection, weight loss' },
+        { question: 'What is the approximate female-to-male ratio in SLE?', options: ['9:1', '3:1', '1:1', '1:3'], correct_index: 0, explanation: 'SLE is about nine times more common in women.', source_quote: 'Female:male about 9:1, peak age 15-45' },
+        { question: 'What is the most common cardiac manifestation of SLE?', options: ['Pericarditis', 'Libman-Sacks endocarditis', 'Premature CAD', 'Myocarditis'], correct_index: 0, explanation: 'Pericarditis is listed as the most common cardiac manifestation.', source_quote: 'Pleuritis, pericarditis (most common cardiac)' },
+        { question: 'What is the leading long-term cause of death in SLE?', options: ['Cardiovascular disease', 'Infection', 'Lupus nephritis', 'Lymphoma'], correct_index: 0, explanation: 'Infection and active disease cause early deaths; cardiovascular disease causes late deaths.', source_quote: 'Late deaths: cardiovascular disease.' },
+        { question: 'Which antibody is associated with drug-induced lupus?', options: ['Anti-histone', 'Anti-Smith', 'Anti-La (SSB)', 'Anticardiolipin'], correct_index: 0, explanation: 'Anti-histone antibody is the marker of drug-induced lupus.', source_quote: 'Anti-histone: Drug-induced lupus' },
+        { question: 'What is the recommended hydroxychloroquine dose limit?', options: ['5 mg/kg/day or less, actual body weight', '5 mg/kg/day or less, ideal body weight', '10 mg/kg/day or less, actual body weight', '15 mg/kg/day or less, ideal body weight'], correct_index: 0, explanation: 'The review limits the dose to 5 mg/kg/day or less using actual body weight.', source_quote: 'Dose 5 mg/kg/day or less (actual body weight)' },
+        { question: 'Which vaccine should be avoided in a patient on immunosuppressants?', options: ['MMR', 'Recombinant zoster (Shingrix)', 'Inactivated influenza', 'PCV20'], correct_index: 0, explanation: 'MMR is a live vaccine; the other options are not live vaccines.', source_quote: 'Avoid live vaccines (MMR, varicella, live zoster, yellow fever, intranasal influenza)' },
+        { question: 'Which HLA types are listed as risk factors for SLE?', options: ['HLA-DR2/DR3', 'HLA-B27', 'HLA-DQ2/DQ8', 'HLA-A3'], correct_index: 0, explanation: 'The review lists HLA-DR2/DR3 among the risk factors.', source_quote: 'Risk factors: family history, HLA-DR2/DR3, early complement deficiency (C1q, C2, C4)' },
+        { question: 'How are the oral and nasal ulcers of SLE typically described?', options: ['Painless', 'Painful and scarring', 'Painful and bleeding', 'Limited to the tongue'], correct_index: 0, explanation: 'The review describes these mucosal ulcers as painless.', source_quote: 'painless oral/nasal ulcers' },
+        { question: 'Which area does the malar rash of SLE spare?', options: ['Nasolabial folds', 'Cheeks', 'Bridge of the nose', 'Forehead'], correct_index: 0, explanation: 'Sparing of the nasolabial folds is the feature named in the review.', source_quote: 'Malar rash sparing nasolabial folds' },
+        { question: 'Which type of hypersensitivity does immune-complex deposition in SLE represent?', options: ['Type III', 'Type I', 'Type II', 'Type IV'], correct_index: 0, explanation: 'Immune-complex deposition is type III; the cytopenias are type II.', source_quote: 'immune-complex deposition (type III hypersensitivity); cytopenias are type II' },
+        { question: 'How is the arthritis of SLE characterized?', options: ['Symmetric, small-joint and non-erosive', 'Asymmetric, large-joint and erosive', 'Symmetric, small-joint and erosive', 'Limited to the spine'], correct_index: 0, explanation: 'The review describes symmetric small-joint arthritis that is non-erosive.', source_quote: 'Symmetric small-joint arthritis, non-erosive (Jaccoud arthropathy)' }
+      ],
+      medium: [
+        { question: 'Which antibody correlates with disease activity and nephritis?', options: ['Anti-dsDNA', 'Anti-Smith', 'ANA', 'Anti-histone'], correct_index: 0, explanation: 'Anti-dsDNA is specific and tracks both disease activity and nephritis.', source_quote: 'Anti-dsDNA: Specific; correlates with disease activity and nephritis' },
+        { question: 'Why are C3 and C4 low during active SLE?', options: ['They are consumed during active disease', 'Hydroxychloroquine blocks their production', 'Anti-Smith antibodies remove them from the blood', 'They rise only in remission because of steroid use'], correct_index: 0, explanation: 'Complement is consumed during active disease, especially nephritis.', source_quote: 'Low C3 / C4: Consumed during active disease (especially nephritis)' },
+        { question: 'In a patient with SLE, what does a high CRP suggest?', options: ['Infection or serositis', 'An uncomplicated flare', 'Drug-induced lupus', 'Hydroxychloroquine toxicity'], correct_index: 0, explanation: 'ESR rises with activity, but CRP is usually normal, so a high value points elsewhere.', source_quote: 'CRP is usually normal; a high CRP suggests infection or serositis' },
+        { question: 'Which laboratory finding is associated with antiphospholipid antibodies?', options: ['False-positive VDRL/RPR', 'Positive anti-histone antibody', 'Shortened PTT', 'Elevated C3 and C4'], correct_index: 0, explanation: 'These antibodies can cause a false-positive VDRL/RPR and a prolonged PTT.', source_quote: 'false-positive VDRL/RPR, prolonged PTT' },
+        { question: 'What is the entry criterion of the 2019 EULAR/ACR classification?', options: ['ANA titer of at least 1:80', 'Positive anti-dsDNA', 'Low C3 or C4', 'Biopsy-proven lupus nephritis'], correct_index: 0, explanation: 'Classification is considered only after this ANA threshold is met.', source_quote: 'Entry criterion: ANA titer of at least 1:80.' },
+        { question: 'When is a patient classified as having SLE under the 2019 EULAR/ACR criteria?', options: ['10 or more points and at least one clinical criterion', '10 or more points from immunologic criteria alone', '6 or more points and a positive ANA', '4 or more points and at least one clinical criterion'], correct_index: 0, explanation: 'Both the point total and a clinical criterion are required.', source_quote: 'classify as SLE with 10 or more points and at least one clinical criterion' },
+        { question: 'What should be checked before starting azathioprine?', options: ['TPMT', 'Retinal exam', 'DEXA', 'Anti-histone antibody'], correct_index: 0, explanation: 'The monitoring table lists TPMT before starting, followed by CBC and LFTs.', source_quote: 'Azathioprine: Check TPMT before starting; CBC and LFTs' },
+        { question: 'Why is hydroxychloroquine continued during pregnancy?', options: ['It reduces flares and neonatal lupus risk', 'It replaces low-dose aspirin', 'It treats established congenital heart block', 'It replaces LMWH in antiphospholipid positive patients'], correct_index: 0, explanation: 'The review recommends continuing it for these two benefits.', source_quote: 'Continue hydroxychloroquine (reduces flares and neonatal lupus risk).' },
+        { question: 'What is the eye-screening schedule for hydroxychloroquine in a patient without added risk factors?', options: ['Baseline exam, then annually after 5 years', 'Annual exams from the first year', 'Exams every 6 months from the start', 'Exams only when visual symptoms appear'], correct_index: 0, explanation: 'Screening starts sooner with renal disease, tamoxifen or a high dose.', source_quote: 'Baseline retinal exam, then annually after 5 years' },
+        { question: 'Which combination favors drug-induced lupus over SLE?', options: ['Normal complement with rare renal and CNS disease', 'Low complement with common renal disease', 'Positive anti-Smith with female predominance', 'Chronic course with positive anti-dsDNA and anti-Smith'], correct_index: 0, explanation: 'Drug-induced lupus usually spares the kidney and CNS, and complement is usually normal.', source_quote: 'Renal / CNS: Rare. Complement: Usually normal' },
+        { question: 'How long should SLE be quiescent before planning conception?', options: ['At least 6 months', 'At least 1 month', 'At least 3 months', 'No waiting period is needed'], correct_index: 0, explanation: 'The review advises planning conception after at least 6 months of quiescence.', source_quote: 'Plan conception after at least 6 months of disease quiescence' },
+        { question: 'Which supplement is listed in the monitoring plan for methotrexate?', options: ['Folic acid', 'Vitamin K', 'Vitamin B6', 'Iron'], correct_index: 0, explanation: 'The methotrexate row lists folic acid alongside laboratory monitoring.', source_quote: 'CBC, LFTs, creatinine every 1-3 months; folic acid; avoid alcohol; teratogenic' },
+        { question: 'Which biologic listed for SLE is described as anti-BAFF?', options: ['Belimumab', 'Anifrolumab', 'Rituximab', 'Voclosporin'], correct_index: 0, explanation: 'Belimumab is labeled anti-BAFF, while anifrolumab targets the type I IFN receptor.', source_quote: 'Belimumab (anti-BAFF), anifrolumab (type I IFN receptor), rituximab' },
+        { question: 'What is the target of anifrolumab?', options: ['Type I IFN receptor', 'BAFF', 'Calcineurin', 'TNF'], correct_index: 0, explanation: 'The treatment table names the type I IFN receptor as its target.', source_quote: 'anifrolumab (type I IFN receptor)' },
+        { question: 'Which finding carries the highest weight in the 2019 EULAR/ACR criteria, according to the review?', options: ['Class III/IV lupus nephritis', 'Class II/V lupus nephritis', 'Anti-dsDNA', 'Anti-Smith'], correct_index: 0, explanation: 'Class III/IV nephritis scores 10, class II/V scores 8, and anti-dsDNA or anti-Smith scores 6.', source_quote: 'Highest weights: class III/IV lupus nephritis = 10; class II/V = 8; anti-dsDNA or anti-Smith = 6.' }
+      ],
+      hard: [
+        { question: 'A 30-year-old woman has fatigue and arthralgia only, with no other findings. What is the best approach to ANA testing?', options: ['Do not order ANA reflexively', 'Order ANA and refer if it is positive', 'Order anti-dsDNA and anti-Smith instead', 'Start hydroxychloroquine and then test'], correct_index: 0, explanation: 'Low pretest probability means a positive ANA would have low predictive value.', source_quote: 'Do NOT order ANA without clinical suspicion (Choosing Wisely)' },
+        { question: 'A healthy, asymptomatic 68-year-old has a low-titer positive ANA. What is the best next step?', options: ['Reassure, with no referral', 'Refer urgently to rheumatology', 'Start hydroxychloroquine', 'Start low-dose prednisone'], correct_index: 0, explanation: 'Low-titer positive ANA is common in healthy people, especially older adults.', source_quote: 'Low-titer positive ANA is common in healthy people, especially older adults: reassure, do not refer.' },
+        { question: 'A 58-year-old man on hydralazine develops lupus symptoms and a positive anti-histone antibody. What is the most appropriate management?', options: ['Stop the drug', 'Start lifelong hydroxychloroquine', 'Start cyclophosphamide', 'Refer for renal biopsy'], correct_index: 0, explanation: 'Drug-induced lupus resolves after the offending drug is stopped.', source_quote: 'Hydralazine + lupus symptoms + anti-histone: Drug-induced lupus - stop the drug' },
+        { question: 'A patient with SLE on hydroxychloroquine has new proteinuria, hematuria and RBC casts. What should be done?', options: ['Refer urgently for evaluation and renal biopsy', 'Add an NSAID and recheck in 3 months', 'Repeat urinalysis at the next 6-month visit', 'Start a live vaccine series before treatment'], correct_index: 0, explanation: 'Renal involvement is an urgent referral trigger.', source_quote: 'New proteinuria or hematuria in SLE: Refer urgently (renal biopsy)' },
+        { question: 'A pregnant patient with SLE is anti-Ro positive. Which monitoring is recommended?', options: ['Fetal echocardiography or PR-interval monitoring, weeks 16-26', 'Maternal retinal exams every month', 'Fetal echocardiography only after delivery', 'No additional monitoring if she feels well'], correct_index: 0, explanation: 'Maternal anti-Ro/La antibodies are linked to congenital heart block.', source_quote: 'Anti-Ro/La positive: fetal echocardiography / PR-interval monitoring (weeks 16-26) for congenital heart block.' },
+        { question: 'A patient on mycophenolate plans pregnancy and needs a steroid-sparing drug. Which one is compatible?', options: ['Azathioprine', 'Methotrexate', 'Cyclophosphamide', 'Continuing mycophenolate'], correct_index: 0, explanation: 'Azathioprine is pregnancy-compatible; the other three must be stopped before conception.', source_quote: 'Compatible: hydroxychloroquine, azathioprine, prednisone, tacrolimus, cyclosporine' },
+        { question: 'A non-pregnant patient has antiphospholipid syndrome with a prior thrombosis. What is the recommended long-term treatment?', options: ['Lifelong warfarin', 'A direct oral anticoagulant', 'Aspirin alone', 'Three months of LMWH'], correct_index: 0, explanation: 'The review recommends warfarin and advises avoiding DOACs.', source_quote: 'Lifelong warfarin after thrombosis (avoid DOACs)' },
+        { question: 'A patient with SLE has positive antiphospholipid antibodies and asks about contraception. Which method must be avoided?', options: ['Combined estrogen-progestin pill', 'Copper IUD', 'Levonorgestrel IUD', 'Barrier method'], correct_index: 0, explanation: 'Estrogen-containing methods are US MEC category 4 in this situation.', source_quote: 'Avoid estrogen (pill, patch, ring) - US MEC category 4.' },
+        { question: 'A patient has taken prednisone 25 mg/day for 3 weeks. Which vaccine can be given?', options: ['Recombinant zoster (Shingrix)', 'MMR', 'Varicella', 'Intranasal influenza'], correct_index: 0, explanation: 'Live vaccines are avoided at this steroid dose and duration; Shingrix is recombinant.', source_quote: 'Avoid live vaccines ... on immunosuppressants or prednisone 20 mg/day or more for 2 weeks or longer.' },
+        { question: 'A patient with SLE on immunosuppression presents with new fever. What is the most important action?', options: ['Evaluate promptly for infection', 'Assume a flare and raise the steroid dose', 'Stop hydroxychloroquine and observe', 'Reassure and review at the next routine visit'], correct_index: 0, explanation: 'Infection is a leading early cause of death, so fever needs prompt evaluation.', source_quote: 'Prompt evaluation of fever - infection is a leading early cause of death.' },
+        { question: 'A patient with lupus nephritis on cyclophosphamide attends for monitoring. Which complication is the urinalysis meant to detect?', options: ['Hemorrhagic cystitis', 'Avascular necrosis', 'Retinal toxicity', 'Osteoporosis'], correct_index: 0, explanation: 'The monitoring table links urinalysis on cyclophosphamide to hemorrhagic cystitis.', source_quote: 'CBC, urinalysis (hemorrhagic cystitis), infertility and malignancy risk' },
+        { question: 'A sexually active 26-year-old with SLE is starting mycophenolate. What is the most appropriate contraceptive advice?', options: ['Highly effective contraception, with LARC preferred', 'No contraception is needed with this drug', 'Barrier methods alone are preferred', 'Delay the discussion until pregnancy is planned'], correct_index: 0, explanation: 'Mycophenolate is teratogenic, so reliable contraception is required.', source_quote: 'On teratogens (MMF, MTX, cyclophosphamide): Highly effective contraception required (LARC preferred)' },
+        { question: 'A pregnant patient with stable SLE is 10 weeks into her pregnancy. Which drug should be added from 12 weeks to reduce preeclampsia risk?', options: ['Low-dose aspirin', 'Warfarin', 'Methotrexate', 'Lisinopril'], correct_index: 0, explanation: 'The review recommends low-dose aspirin from 12 weeks.', source_quote: 'Low-dose aspirin from 12 weeks to reduce preeclampsia risk.' },
+        { question: 'A patient with SLE needs chronic glucocorticoid therapy. Which test is recommended to assess a major long-term risk?', options: ['DEXA', 'Baseline TPMT', 'Fetal echocardiography', 'Anti-histone antibody'], correct_index: 0, explanation: 'Chronic steroid use calls for bone health assessment with DEXA.', source_quote: 'Bone health: DEXA for chronic steroid use; calcium, vitamin D, weight-bearing exercise.' },
+        { question: 'A woman with SLE takes lisinopril, hydroxychloroquine, azathioprine and prednisone, and plans pregnancy. Which drug should be stopped before conception?', options: ['Lisinopril', 'Hydroxychloroquine', 'Azathioprine', 'Prednisone'], correct_index: 0, explanation: 'ACE inhibitors are stopped before conception; the other three are listed as compatible.', source_quote: 'Stop before conception: mycophenolate, methotrexate, cyclophosphamide, warfarin, ACE inhibitors/ARBs.' }
+      ]
     }
- 
-    // تسجيل الدخول: يُضاف المستخدم مرة واحدة فقط.
-    const registered = isRegistered_(email);
-    if (!registered) {
-      const users = usersSheet_();
-      if (users.getLastRow() === 0) users.appendRow(['التاريخ والوقت', 'الاسم', 'البريد الإلكتروني', 'الصفحة']);
-      users.appendRow([new Date(), name, email, clean_(data.page, 500)]);
-    }
-    return json_(history_(email, registered));
-  } catch (err) {
-    return json_({ ok: false, error: String(err) });
-  } finally {
-    lock.releaseLock();
-  }
-}
- 
-function usersSheet_() {
-  return SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
-}
- 
-function resultsSheet_() {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  let sheet = ss.getSheetByName(RESULTS_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(RESULTS_SHEET, ss.getNumSheets());
-    sheet.appendRow(['التاريخ والوقت', 'الاسم', 'البريد الإلكتروني', 'الموضوع', 'المستوى', 'الصحيحة', 'عدد الأسئلة', 'النسبة %']);
-  }
-  return sheet;
-}
- 
-function isRegistered_(email) {
-  const values = usersSheet_().getDataRange().getValues();
-  return values.some(function (row) { return String(row[2]).trim().toLowerCase() === email; });
-}
- 
-function history_(email, registered) {
-  const values = resultsSheet_().getDataRange().getValues().slice(1);
-  const tests = values
-    .filter(function (row) { return String(row[2]).trim().toLowerCase() === email; })
-    .map(function (row) {
-      return {
-        date: row[0] instanceof Date ? row[0].toISOString() : String(row[0]),
-        topic: row[3], level: row[4], score: row[5], total: row[6], percent: row[7]
-      };
-    });
-  return { ok: true, registered: registered, tests: tests };
-}
- 
-function sendResultEmail_(name, email, data, score, total, percent, attempt) {
-  try {
-    if (MailApp.getRemainingDailyQuota() < 1) return false;
-    const missed = Array.isArray(data.missed) ? data.missed.slice(0, 40) : [];
-    let html =
-      '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.7;color:#1c2b33">' +
-      '<h2 style="color:#0f5e63">ذاكِر – نتيجة الاختبار رقم ' + attempt + '</h2>' +
-      '<p>أهلًا ' + esc_(name) + '،</p>' +
-      '<p><b>الموضوع:</b> <span dir="auto">' + esc_(clean_(data.topic, 200)) + '</span><br>' +
-      '<b>المستوى:</b> ' + esc_(clean_(data.level, 50)) + '<br>' +
-      '<b>النتيجة:</b> ' + score + ' من ' + total + ' (' + percent + '%)</p>';
-    if (missed.length) {
-      html += '<h3>الأسئلة التي تحتاج إلى مراجعة</h3><ol>';
-      missed.forEach(function (m) {
-        html += '<li style="margin-bottom:.6em"><div dir="auto">' + esc_(clean_(m.question, 500)) + '</div>' +
-          '<div dir="auto" style="color:#17693d">✓ ' + esc_(clean_(m.answer, 300)) + '</div></li>';
+  }];
+
+  // Original questions in a short form: [question, correct answer, wrong, wrong, wrong, explanation].
+  var ORIGINAL_TOPICS = [{
+    id: 'diabetes', title: 'Type 2 Diabetes', reference: 'ADA Standards of Care in Diabetes',
+    easy: [
+      ['Which HbA1c value meets the diagnostic threshold for diabetes?', '6.5% or higher', '5.7% or higher', '6.0% or higher', '7.5% or higher', 'An HbA1c of 6.5% or higher meets the diagnostic criterion.'],
+      ['Which fasting plasma glucose meets the diagnostic threshold for diabetes?', '126 mg/dL or higher', '100 mg/dL or higher', '110 mg/dL or higher', '200 mg/dL or higher', 'Fasting glucose of 126 mg/dL or higher meets the criterion.'],
+      ['Which 2-hour glucose value on a 75-g oral glucose tolerance test indicates diabetes?', '200 mg/dL or higher', '126 mg/dL or higher', '140 mg/dL or higher', '180 mg/dL or higher', 'A 2-hour value of 200 mg/dL or higher meets the criterion.'],
+      ['In a patient with classic hyperglycemia symptoms, which random glucose confirms diabetes?', '200 mg/dL or higher', '126 mg/dL or higher', '140 mg/dL or higher', '300 mg/dL or higher', 'Symptoms plus a random glucose of 200 mg/dL or higher are diagnostic.'],
+      ['Which HbA1c range defines prediabetes?', '5.7% to 6.4%', '5.0% to 5.6%', '6.0% to 6.9%', '6.5% to 7.0%', 'Prediabetes by HbA1c is 5.7% to 6.4%.'],
+      ['What is a common HbA1c goal for many nonpregnant adults with diabetes?', 'Below 7%', 'Below 5.7%', 'Below 6%', 'Below 9%', 'Below 7% is a common goal, individualized to the patient.'],
+      ['Which is a common adverse effect of metformin?', 'Diarrhea', 'Weight gain', 'Hyperkalemia', 'Urinary retention', 'Gastrointestinal effects such as diarrhea are common with metformin.'],
+      ['Long-term metformin use can cause deficiency of which vitamin?', 'Vitamin B12', 'Vitamin C', 'Vitamin D', 'Vitamin K', 'Metformin can lower vitamin B12 levels.'],
+      ['Which test screens for diabetic kidney disease along with eGFR?', 'Urine albumin-to-creatinine ratio', 'Urine culture', 'Renal ultrasound', '24-hour urine sodium', 'Annual urine albumin-to-creatinine ratio and eGFR are the usual screen.'],
+      ['Which examination screens for diabetic retinopathy?', 'Dilated eye examination', 'Color vision testing', 'Pupillary light reflex testing', 'Visual acuity testing alone', 'Retinopathy screening uses a dilated examination or validated retinal imaging.'],
+      ['Which tool is used to assess loss of protective sensation in the foot?', '10-g monofilament', 'Reflex hammer alone', 'Ankle-brachial index', 'Plain radiograph', 'The 10-g monofilament tests protective sensation.'],
+      ['Which drug class most characteristically causes genital mycotic infections?', 'SGLT2 inhibitors', 'DPP-4 inhibitors', 'Sulfonylureas', 'Biguanides', 'Glucosuria from SGLT2 inhibitors predisposes to genital mycotic infections.'],
+      ['Which oral drug class carries the greatest risk of hypoglycemia?', 'Sulfonylureas', 'Biguanides', 'SGLT2 inhibitors', 'DPP-4 inhibitors', 'Sulfonylureas stimulate insulin release regardless of glucose level.'],
+      ['Which best describes the mechanism of type 2 diabetes?', 'Insulin resistance with relative insulin deficiency', 'Autoimmune destruction of all beta cells', 'Excess insulin secretion alone', 'Absent glucagon production', 'Type 2 diabetes combines insulin resistance with inadequate insulin secretion.'],
+      ['At what age does the ADA recommend starting diabetes screening in all adults?', '35 years', '18 years', '25 years', '65 years', 'The ADA recommends testing all adults starting at age 35.']
+    ],
+    medium: [
+      ['Below which eGFR is metformin contraindicated?', '30 mL/min/1.73 m2', '45 mL/min/1.73 m2', '60 mL/min/1.73 m2', '90 mL/min/1.73 m2', 'Metformin is contraindicated when eGFR is below 30.'],
+      ['Starting metformin is not recommended within which eGFR range?', '30 to 45 mL/min/1.73 m2', '60 to 75 mL/min/1.73 m2', '75 to 90 mL/min/1.73 m2', 'Above 90 mL/min/1.73 m2', 'Initiation is not recommended at an eGFR of 30 to 45.'],
+      ['Why is a GLP-1 receptor agonist or SGLT2 inhibitor favored in established atherosclerotic disease?', 'Selected agents reduce cardiovascular events', 'They are the cheapest diabetes drugs', 'They remove the need for statins', 'They cure type 2 diabetes', 'Selected agents have shown cardiovascular benefit in outcome trials.'],
+      ['Which class is preferred for a patient with type 2 diabetes and heart failure?', 'SGLT2 inhibitors', 'Thiazolidinediones', 'Sulfonylureas', 'Meglitinides', 'SGLT2 inhibitors reduce heart failure hospitalization.'],
+      ['Which class slows progression of diabetic kidney disease with albuminuria?', 'SGLT2 inhibitors', 'Sulfonylureas', 'Meglitinides', 'Alpha-glucosidase inhibitors', 'SGLT2 inhibitors have shown kidney benefit in albuminuric CKD.'],
+      ['Which drug should be avoided in symptomatic heart failure because of fluid retention?', 'Pioglitazone', 'Empagliflozin', 'Metformin', 'Liraglutide', 'Thiazolidinediones cause fluid retention and can worsen heart failure.'],
+      ['A personal or family history of which cancer contraindicates GLP-1 receptor agonists?', 'Medullary thyroid carcinoma', 'Papillary thyroid carcinoma', 'Basal cell carcinoma', 'Colorectal adenocarcinoma', 'These agents carry a boxed warning about medullary thyroid carcinoma.'],
+      ['Which condition can make HbA1c unreliable?', 'Hemolytic anemia', 'Hypertension', 'Hyperlipidemia', 'Obesity', 'Altered red cell lifespan makes HbA1c misleading.'],
+      ['What lipid therapy is generally recommended for adults aged 40 to 75 with diabetes?', 'At least a moderate-intensity statin', 'Fibrate monotherapy', 'Niacin monotherapy', 'No therapy unless LDL exceeds 190 mg/dL', 'Moderate-intensity statin therapy is the usual baseline.'],
+      ['Which antihypertensive class is preferred with diabetes, hypertension and albuminuria?', 'ACE inhibitor or ARB', 'Alpha-blocker', 'Central alpha-agonist', 'Non-selective beta-blocker', 'ACE inhibitors or ARBs reduce albuminuria progression.'],
+      ['How do SGLT2 inhibitors lower glucose?', 'They reduce renal glucose reabsorption', 'They stimulate insulin release from beta cells', 'They block intestinal carbohydrate digestion', 'They activate PPAR-gamma receptors', 'They increase urinary glucose excretion.'],
+      ['What is the initial treatment for mild hypoglycemia in a conscious patient?', '15 to 20 g of fast-acting glucose', 'A high-fat snack', 'Intravenous insulin', 'Waiting one hour without treatment', 'Fast-acting glucose is given, then glucose is rechecked in about 15 minutes.'],
+      ['Which is the appropriate home treatment for severe hypoglycemia in an unresponsive patient?', 'Glucagon', 'Oral juice', 'Rapid-acting insulin', 'Metformin', 'An unresponsive patient should not take oral treatment and should receive glucagon.'],
+      ['Euglycemic diabetic ketoacidosis is most associated with which class?', 'SGLT2 inhibitors', 'DPP-4 inhibitors', 'Sulfonylureas', 'Thiazolidinediones', 'SGLT2 inhibitors can cause ketoacidosis without marked hyperglycemia.'],
+      ['Beta-blockers may mask which symptom of hypoglycemia?', 'Palpitations', 'Sweating', 'Confusion', 'Hunger', 'Adrenergic symptoms such as palpitations can be blunted; sweating usually persists.']
+    ],
+    hard: [
+      ['A 58-year-old with a prior myocardial infarction has an HbA1c of 8.2% on metformin. What is the best addition?', 'A GLP-1 receptor agonist with proven cardiovascular benefit', 'A sulfonylurea', 'Pioglitazone', 'No change until HbA1c exceeds 10%', 'Established atherosclerotic disease favors an agent with proven cardiovascular benefit.'],
+      ['A patient with heart failure with reduced ejection fraction has an HbA1c of 7.8% on metformin. What is the best addition?', 'Empagliflozin', 'Pioglitazone', 'Saxagliptin', 'Glipizide', 'SGLT2 inhibitors reduce heart failure events; pioglitazone and saxagliptin are poor choices.'],
+      ['A patient taking metformin now has an eGFR of 25. What should be done with metformin?', 'Stop it', 'Double the dose', 'Continue the same dose', 'Change to extended release at the same dose', 'Metformin is contraindicated at an eGFR below 30.'],
+      ['A patient on high-dose basal insulin has a fasting glucose of 100 mg/dL and an HbA1c of 9%. What is the best next step?', 'Address postprandial glucose with a GLP-1 receptor agonist or prandial insulin', 'Increase basal insulin further', 'Stop all glucose-lowering drugs', 'Repeat HbA1c in one year', 'Fasting glucose is at goal, so more basal insulin risks hypoglycemia without treating the problem.'],
+      ['A patient on long-term metformin has numbness in the feet and macrocytic anemia. Which test is most useful?', 'Vitamin B12 level', 'Serum ferritin', 'Hemoglobin electrophoresis', 'Urine albumin-to-creatinine ratio', 'Metformin-associated B12 deficiency can cause both findings.'],
+      ['An asymptomatic adult has one HbA1c of 6.6% and no other test. What is the next step?', 'Repeat testing to confirm the diagnosis', 'Start insulin today', 'Diagnose type 1 diabetes', 'Reassure and do not retest', 'Without clear hyperglycemia, diagnosis requires two abnormal results.'],
+      ['An asymptomatic adult has an HbA1c of 6.8% and a fasting glucose of 132 mg/dL from one sample. How should this be interpreted?', 'Diabetes is confirmed without more testing', 'Repeat both tests in 3 months', 'An oral glucose tolerance test is required', 'The results indicate prediabetes', 'Two different concordant abnormal tests from one sample confirm the diagnosis.'],
+      ['A patient on empagliflozin has vomiting, a glucose of 180 mg/dL, low bicarbonate and ketones. What is the most likely diagnosis?', 'Euglycemic diabetic ketoacidosis', 'Hyperosmolar hyperglycemic state', 'Lactic acidosis from metformin only', 'Simple gastroenteritis without acidosis', 'Ketoacidosis with near-normal glucose is typical of this complication.'],
+      ['A frail 84-year-old on glipizide has recurrent hypoglycemia and an HbA1c of 6.4%. What is the best action?', 'Stop glipizide and relax the HbA1c goal', 'Add basal insulin', 'Increase glipizide', 'Target an HbA1c below 6%', 'Tight control harms frail older adults, and sulfonylureas are a common cause of hypoglycemia.'],
+      ['A thin 28-year-old has weight loss, a glucose of 320 mg/dL, ketones and positive GAD antibodies. What treatment is required?', 'Insulin', 'Metformin alone', 'Diet alone', 'A DPP-4 inhibitor alone', 'This presentation is autoimmune diabetes and needs insulin.'],
+      ['A patient with diabetes has a blood pressure of 148/88 mmHg and marked albuminuria. Which drug is the best initial choice?', 'An ACE inhibitor', 'Atenolol', 'Doxazosin', 'Clonidine', 'ACE inhibitors or ARBs are preferred when albuminuria is present.'],
+      ['Two weeks after starting lisinopril, creatinine has risen 15% and potassium is normal. What should be done?', 'Continue lisinopril and monitor', 'Stop lisinopril permanently', 'Add an ARB', 'Refer for urgent dialysis', 'A small, stable creatinine rise is expected and is not a reason to stop.'],
+      ['A woman with type 2 diabetes who takes lisinopril plans pregnancy. Which change is needed before conception?', 'Stop lisinopril', 'Stop insulin', 'Start an ARB', 'Avoid all glucose monitoring', 'ACE inhibitors are fetotoxic and should be stopped before conception.'],
+      ['A patient on semaglutide has severe epigastric pain radiating to the back and a high lipase. What should be done?', 'Stop semaglutide and treat pancreatitis', 'Increase the semaglutide dose', 'Add a DPP-4 inhibitor', 'Give antacids and continue unchanged', 'Suspected pancreatitis requires stopping the drug.'],
+      ['A patient with neuropathy has a plantar foot ulcer that probes to bone. What is the main concern?', 'Osteomyelitis', 'Gout', 'Plantar fasciitis', 'Tinea pedis', 'A positive probe-to-bone test strongly suggests osteomyelitis.']
+    ]
+  }, {
+    id: 'hypertension', title: 'Hypertension', reference: 'ACC/AHA High Blood Pressure Guideline',
+    easy: [
+      ['Which reading is normal under ACC/AHA categories?', 'Below 120/80 mmHg', '124/78 mmHg', '132/84 mmHg', '142/92 mmHg', 'Normal is below 120 systolic and below 80 diastolic.'],
+      ['Which reading is classified as elevated blood pressure?', '125/76 mmHg', '118/76 mmHg', '134/76 mmHg', '146/76 mmHg', 'Elevated is 120 to 129 systolic with diastolic below 80.'],
+      ['Which range defines stage 1 hypertension?', '130-139 or 80-89 mmHg', '120-129 and below 80 mmHg', '140-159 or 90-99 mmHg', '160 or higher and 100 or higher mmHg', 'Stage 1 is 130 to 139 systolic or 80 to 89 diastolic.'],
+      ['Which threshold defines stage 2 hypertension?', '140 or higher systolic, or 90 or higher diastolic', '130 or higher systolic only', '150 or higher systolic only', '180 or higher systolic only', 'Stage 2 begins at 140 systolic or 90 diastolic.'],
+      ['What distinguishes hypertensive emergency from severe asymptomatic hypertension?', 'Acute target-organ damage', 'Patient age', 'The number of current drugs', 'Family history', 'Acute organ damage defines an emergency.'],
+      ['Which is a first-line class for most patients with hypertension?', 'Thiazide-type diuretic', 'Alpha-blocker', 'Loop diuretic', 'Central alpha-agonist', 'Thiazide-type diuretics, ACE inhibitors, ARBs and calcium channel blockers are first line.'],
+      ['Which adverse effect is classic for ACE inhibitors?', 'Dry cough', 'Peripheral edema', 'Hirsutism', 'Reflex tachycardia', 'Dry cough is a classic ACE inhibitor effect.'],
+      ['Which adverse effect is common with amlodipine?', 'Peripheral edema', 'Dry cough', 'Hyperkalemia', 'Gout', 'Dihydropyridine calcium channel blockers commonly cause edema.'],
+      ['Thiazide diuretics commonly cause which electrolyte disturbance?', 'Hypokalemia', 'Hyperkalemia', 'Hypernatremia', 'Hypocalcemia', 'Thiazides increase urinary potassium loss.'],
+      ['Which class is contraindicated in pregnancy?', 'ACE inhibitors', 'Centrally acting methyldopa', 'Labetalol', 'Nifedipine', 'ACE inhibitors and ARBs are fetotoxic.'],
+      ['What is recommended to confirm hypertension when feasible?', 'Out-of-office blood pressure measurement', 'A chest radiograph', 'A single office reading', 'A serum renin level', 'Home or ambulatory measurement helps confirm the diagnosis.'],
+      ['Which eating pattern is recommended to lower blood pressure?', 'DASH diet', 'High-sodium diet', 'Carnivore diet', 'Low-potassium diet', 'The DASH diet lowers blood pressure.'],
+      ['What effect does a cuff that is too small have on the reading?', 'It falsely raises the reading', 'It falsely lowers the reading', 'It has no effect', 'It only changes the heart rate', 'An undersized cuff overestimates blood pressure.'],
+      ['How long should a patient usually sit quietly before office measurement?', 'At least 5 minutes', 'No rest is needed', 'At least 30 seconds', 'At least 1 hour', 'At least 5 minutes of quiet rest is recommended.'],
+      ['Reducing intake of which dietary component lowers blood pressure?', 'Sodium', 'Potassium', 'Fiber', 'Water', 'Sodium reduction lowers blood pressure.']
+    ],
+    medium: [
+      ['What defines white coat hypertension?', 'High office readings with normal out-of-office readings', 'Normal office readings with high home readings', 'High readings in every setting', 'Low readings in every setting', 'The elevation appears only in the clinical setting.'],
+      ['What defines masked hypertension?', 'Normal office readings with high out-of-office readings', 'High office readings with normal home readings', 'High readings only during exercise testing', 'Normal readings in every setting', 'The office measurement hides out-of-office hypertension.'],
+      ['What is the usual replacement for an ACE inhibitor that causes cough?', 'An ARB', 'A higher ACE inhibitor dose', 'A second ACE inhibitor', 'A cough suppressant indefinitely', 'ARBs rarely cause this cough.'],
+      ['Which adverse effect requires permanently stopping an ACE inhibitor?', 'Angioedema', 'A mild creatinine rise', 'Mild dizziness on the first day', 'A dry mouth', 'Angioedema can threaten the airway.'],
+      ['Why is combining an ACE inhibitor with an ARB generally avoided?', 'It raises the risk of hyperkalemia and kidney injury', 'It causes severe hypokalemia only', 'The two drugs cancel each other', 'It causes marked weight gain', 'Dual blockade adds risk without routine benefit.'],
+      ['Which condition can thiazide diuretics worsen?', 'Gout', 'Hypothyroidism', 'Osteoarthritis', 'Migraine', 'Thiazides raise uric acid.'],
+      ['Which test screens for primary aldosteronism?', 'Aldosterone-to-renin ratio', 'Plasma metanephrines', 'Dexamethasone suppression test', 'Renal biopsy', 'The ratio is the standard screen.'],
+      ['Which clue suggests renal artery stenosis?', 'A marked creatinine rise after starting an ACE inhibitor', 'A dry cough', 'Heat intolerance', 'Episodic flushing with diarrhea', 'Loss of efferent tone reveals poor renal perfusion.'],
+      ['Which test screens for pheochromocytoma?', 'Plasma free metanephrines', 'Aldosterone-to-renin ratio', 'Serum TSH', 'Renal artery duplex', 'Metanephrines are the preferred screen.'],
+      ['Which secondary cause is suggested by obesity, snoring and resistant hypertension?', 'Obstructive sleep apnea', 'Coarctation of the aorta', 'Hypothyroidism', 'Pheochromocytoma', 'Sleep apnea is a common contributor to resistant hypertension.'],
+      ['What defines resistant hypertension?', 'Uncontrolled blood pressure on three drugs including a diuretic', 'Any reading above 180 mmHg', 'Hypertension before age 30', 'Uncontrolled blood pressure on one drug', 'Three agents at adequate doses, including a diuretic, define it.'],
+      ['Which add-on drug is often effective for resistant hypertension?', 'Spironolactone', 'Hydralazine as first choice', 'Minoxidil as first choice', 'Clonidine as first choice', 'Spironolactone is the usual fourth agent.'],
+      ['Which initial classes are generally preferred in Black adults without CKD or heart failure?', 'Thiazide-type diuretic or calcium channel blocker', 'ACE inhibitor alone', 'Beta-blocker alone', 'Alpha-blocker alone', 'These classes are generally more effective initially in this group.'],
+      ['Which drugs are commonly used for chronic hypertension in pregnancy?', 'Labetalol or nifedipine', 'Lisinopril or losartan', 'Spironolactone or aliskiren', 'Atenolol or enalapril', 'Labetalol and nifedipine are common choices.'],
+      ['What initial approach is generally advised for stage 2 hypertension with blood pressure well above goal?', 'Two first-line agents from different classes', 'Lifestyle change alone for one year', 'One alpha-blocker', 'An ACE inhibitor plus an ARB', 'Combination therapy from different classes is generally advised.']
+    ],
+    hard: [
+      ['An asymptomatic 62-year-old has a blood pressure of 190/112 mmHg with no organ damage. What is the best approach?', 'Oral therapy with close outpatient follow-up', 'Admission for intravenous nicardipine', 'Immediate lowering to normal', 'No treatment or follow-up', 'Without organ damage, gradual oral treatment is appropriate.'],
+      ['A patient has a blood pressure of 210/125 mmHg with pulmonary edema and chest pain. What is the best approach?', 'Hospital admission for intravenous therapy', 'Start oral hydrochlorothiazide at home', 'Recheck in one month', 'Advise salt restriction only', 'This is a hypertensive emergency.'],
+      ['A patient with hypertension and CKD has heavy albuminuria. Which class is preferred?', 'ACE inhibitor or ARB', 'Dihydropyridine calcium channel blocker alone', 'Alpha-blocker', 'Central alpha-agonist', 'Renin-angiotensin blockade slows albuminuric kidney disease.'],
+      ['A 28-year-old woman with new severe hypertension has an abdominal bruit. Which cause should be evaluated?', 'Fibromuscular dysplasia', 'Atherosclerotic renal artery disease as the likeliest cause', 'Essential hypertension without testing', 'Hypothyroidism', 'Fibromuscular dysplasia typically affects younger women.'],
+      ['A patient has hypertension and unexplained hypokalemia without diuretic use. What test comes next?', 'Aldosterone-to-renin ratio', 'Serum cortisol at noon', 'Coronary angiography', 'Urine culture', 'This combination suggests primary aldosteronism.'],
+      ['A patient has episodic headaches, sweating and palpitations with labile hypertension. What test comes next?', 'Plasma free metanephrines', 'Serum aldosterone alone', 'Renal biopsy', 'Echocardiography alone', 'The classic triad suggests pheochromocytoma.'],
+      ['A patient on hydrochlorothiazide has recurrent gout flares. Which blood pressure change is most reasonable?', 'Replace hydrochlorothiazide with losartan', 'Increase hydrochlorothiazide', 'Add chlorthalidone', 'Stop all gout treatment', 'Thiazides raise uric acid, whereas losartan has a mild uricosuric effect.'],
+      ['A patient started on lisinopril has a potassium of 6.2 mEq/L. What is the best immediate action?', 'Hold lisinopril and evaluate urgently', 'Double lisinopril', 'Add spironolactone', 'Add potassium supplements', 'Significant hyperkalemia requires holding the drug and prompt evaluation.'],
+      ['A patient on lisinopril develops lip and tongue swelling. What is the correct management?', 'Stop lisinopril, protect the airway and do not rechallenge', 'Continue with an antihistamine', 'Reduce the dose by half', 'Change to another ACE inhibitor', 'ACE inhibitor angioedema can be life-threatening.'],
+      ['A woman at 10 weeks of pregnancy is taking lisinopril. What is the best change?', 'Switch to labetalol', 'Add losartan', 'Continue lisinopril until delivery', 'Switch to enalapril', 'ACE inhibitors and ARBs should be avoided in pregnancy.'],
+      ['Office readings average 150/94 mmHg, while reliable home readings average 120/76 mmHg. What is the best next step?', 'Monitor without starting a drug for now', 'Start three antihypertensive drugs', 'Screen for pheochromocytoma', 'Admit to hospital', 'This pattern suggests white coat hypertension, which needs follow-up.'],
+      ['Office readings are 124/78 mmHg, while reliable home readings average 145/92 mmHg. What does this suggest?', 'Masked hypertension', 'White coat hypertension', 'Normal blood pressure', 'Orthostatic hypotension', 'Normal office values with high home values define masked hypertension.'],
+      ['A patient on three antihypertensive drugs takes ibuprofen daily for back pain. What is the best first step?', 'Address the ibuprofen use', 'Add a fourth drug immediately', 'Order a renal biopsy', 'Stop all antihypertensive drugs', 'NSAIDs raise blood pressure and blunt several antihypertensive drugs.'],
+      ['Under ACC/AHA guidance, what is the general blood pressure goal after an ischemic stroke once stable?', 'Below 130/80 mmHg', 'Below 160/100 mmHg', 'Below 150/90 mmHg', 'No specific goal', 'A goal below 130/80 mmHg is generally recommended.'],
+      ['A 30-year-old has high arm pressures, weak femoral pulses and rib notching. What is the most likely diagnosis?', 'Coarctation of the aorta', 'Primary aldosteronism', 'Renal artery stenosis', 'White coat hypertension', 'These are classic findings of coarctation.']
+    ]
+  }, {
+    id: 'asthma', title: 'Asthma', reference: 'GINA Report and NAEPP Asthma Guidelines',
+    easy: [
+      ['Which test is preferred to help confirm asthma in adults?', 'Spirometry with bronchodilator testing', 'Chest radiograph', 'CT of the sinuses', 'Serum IgG', 'Spirometry documents variable airflow obstruction.'],
+      ['Which FEV1 response is commonly used to define bronchodilator reversibility?', 'At least 12% and 200 mL', 'At least 2% and 20 mL', 'At least 50% and 1000 mL', 'Any increase at all', 'An increase of at least 12% and 200 mL is the commonly used criterion.'],
+      ['Which symptom pattern is typical of asthma?', 'Variable wheeze and cough, often worse at night', 'Constant unchanging chest pain', 'Hemoptysis with weight loss', 'Painless leg swelling', 'Variable symptoms with nocturnal worsening are typical.'],
+      ['Which is a short-acting beta-agonist?', 'Albuterol', 'Salmeterol', 'Tiotropium', 'Montelukast', 'Albuterol is a short-acting beta-agonist.'],
+      ['Which class is the main long-term anti-inflammatory controller?', 'Inhaled corticosteroids', 'Short-acting beta-agonists', 'Oral antibiotics', 'Antihistamines', 'Inhaled corticosteroids are the core controller therapy.'],
+      ['What reduces the risk of oral thrush with inhaled corticosteroids?', 'Rinsing the mouth after use', 'Using the inhaler only at night', 'Drinking milk first', 'Taking oral antibiotics', 'Rinsing and spitting reduces local deposition.'],
+      ['Which is unsafe as monotherapy in asthma?', 'A long-acting beta-agonist', 'An inhaled corticosteroid', 'Low-dose ICS-formoterol', 'Allergen avoidance', 'A long-acting beta-agonist should be combined with an inhaled corticosteroid.'],
+      ['Which triad includes asthma and nasal polyps?', 'Aspirin-exacerbated respiratory disease', 'Kartagener syndrome', 'Horner syndrome', 'Reiter syndrome', 'The triad is asthma, nasal polyps and aspirin or NSAID sensitivity.'],
+      ['Which agent is used in bronchial provocation testing?', 'Methacholine', 'Albuterol', 'Prednisone', 'Ipratropium', 'Methacholine testing assesses airway hyperresponsiveness.'],
+      ['Which device helps a patient monitor airflow at home?', 'Peak flow meter', 'Pulse oximeter alone', 'Glucometer', 'Thermometer', 'A peak flow meter tracks airflow limitation.'],
+      ['Which vaccine is recommended every year for patients with asthma?', 'Influenza', 'Yellow fever', 'Rabies', 'Typhoid', 'Annual influenza vaccination is recommended.'],
+      ['Which drug can trigger bronchospasm in asthma?', 'Propranolol', 'Amlodipine', 'Acetaminophen', 'Loratadine', 'Non-selective beta-blockers can provoke bronchospasm.'],
+      ['Which spirometric finding indicates obstruction?', 'A reduced FEV1/FVC ratio', 'A raised FEV1/FVC ratio', 'A normal FEV1/FVC ratio with low FVC', 'A high DLCO only', 'A reduced ratio indicates airflow obstruction.'],
+      ['Which systemic drug is used for moderate to severe exacerbations?', 'Oral corticosteroids', 'Oral antihistamines', 'Beta-blockers', 'Loop diuretics', 'Systemic corticosteroids speed recovery.'],
+      ['Which drug can be taken shortly before exercise to prevent exercise-induced symptoms?', 'Albuterol', 'Oral prednisone', 'Montelukast given during the attack', 'Amoxicillin', 'A short-acting beta-agonist before exercise is an established option.']
+    ],
+    medium: [
+      ['Under NAEPP categories, which daytime symptom frequency fits intermittent asthma?', '2 days per week or less', 'Daily', 'Throughout the day', 'Several times every night', 'Intermittent asthma has symptoms on 2 days per week or less.'],
+      ['Under NAEPP categories, which symptom frequency fits mild persistent asthma?', 'More than 2 days per week, but not daily', '2 days per week or less', 'Daily', 'Throughout the day', 'Mild persistent asthma has symptoms more than 2 days per week but not daily.'],
+      ['What should be checked before stepping up asthma therapy?', 'Inhaler technique and adherence', 'Serum vitamin C', 'Thyroid ultrasound', 'Sinus CT in every patient', 'Poor technique and adherence are common causes of poor control.'],
+      ['What does SMART therapy mean?', 'One ICS-formoterol inhaler for maintenance and relief', 'Albuterol alone used on a schedule', 'Oral steroids taken daily', 'Separate salmeterol and albuterol inhalers', 'Single maintenance and reliever therapy uses ICS-formoterol.'],
+      ['Which presentation is typical of cough-variant asthma?', 'Chronic cough without prominent wheeze', 'Fever with lobar consolidation', 'Hemoptysis with a cavity', 'Inspiratory stridor', 'Cough may be the main or only symptom.'],
+      ['Which test is useful when asthma is suspected but spirometry is normal?', 'Methacholine challenge', 'Lung biopsy', 'Bronchial angiography', 'Serum lactate', 'Methacholine testing can detect hyperresponsiveness.'],
+      ['What does a normal or rising PaCO2 suggest in a severe attack?', 'Impending respiratory failure', 'Rapid recovery', 'Mild disease', 'Hyperventilation only', 'Fatigue is reducing ventilation, so this is a warning sign.'],
+      ['What does omalizumab target?', 'IgE', 'IL-5', 'TNF-alpha', 'BAFF', 'Omalizumab is an anti-IgE antibody.'],
+      ['What does mepolizumab target?', 'IL-5', 'IgE', 'IL-17', 'CD20', 'Mepolizumab targets IL-5 in eosinophilic asthma.'],
+      ['Which local adverse effect is common with inhaled corticosteroids?', 'Dysphonia', 'Hearing loss', 'Nasal polyps', 'Tooth eruption', 'Hoarseness is a common local effect.'],
+      ['Which warning applies to montelukast?', 'Neuropsychiatric events', 'Severe hyperkalemia', 'Tendon rupture', 'Hepatic adenoma', 'Montelukast carries a boxed warning for neuropsychiatric events.'],
+      ['Under traditional control assessment, reliever use on how many days suggests poor control?', 'More than 2 days per week', 'Once a year', 'Once every 3 months', 'Never relevant to control', 'Frequent reliever use suggests inadequate control.'],
+      ['Which finding favors asthma over emphysema?', 'Normal or high DLCO', 'Markedly low DLCO', 'Fixed irreversible obstruction', 'Panacinar bullae', 'DLCO is usually preserved in asthma and reduced in emphysema.'],
+      ['Which bronchodilator can be added to a beta-agonist in a severe exacerbation?', 'Ipratropium', 'Propranolol', 'Salmeterol alone', 'Atenolol', 'Ipratropium adds benefit in severe exacerbations.'],
+      ['Which intravenous drug can be considered in a severe exacerbation with a poor initial response?', 'Magnesium sulfate', 'Potassium chloride as bronchodilator', 'Metoprolol', 'Furosemide', 'Intravenous magnesium is an option in severe exacerbations.']
+    ],
+    hard: [
+      ['A 24-year-old has daytime symptoms 3 days a week and reversible obstruction. Which is the best controller approach?', 'Start therapy containing a low-dose inhaled corticosteroid', 'Use oral prednisone every day', 'Use long-acting beta-agonist monotherapy', 'Give no treatment', 'Persistent symptoms call for therapy containing an inhaled corticosteroid.'],
+      ['A patient has poor control on a medium-dose inhaler and uses it incorrectly. What is the next step?', 'Correct the inhaler technique', 'Start a biologic', 'Add long-term oral steroids', 'Stop the controller', 'Technique should be corrected before stepping up.'],
+      ['During a severe attack, a tiring patient has a PaCO2 of 42 mmHg and quiet breath sounds. What is the best action?', 'Prepare for intensive care and possible intubation', 'Discharge with albuterol', 'Reassure because the PaCO2 is normal', 'Give a sedative for anxiety', 'A normal PaCO2 with fatigue signals impending failure.'],
+      ['A patient with asthma and nasal polyps wheezes after ibuprofen. What should be advised?', 'Avoid NSAIDs and aspirin unless specialist-supervised', 'Change to naproxen', 'Double the ibuprofen', 'Take ibuprofen with albuterol', 'This suggests aspirin-exacerbated respiratory disease.'],
+      ['A patient has nocturnal cough and episodic wheeze but normal spirometry. What is the best next test?', 'Methacholine challenge', 'Lung biopsy', 'Coronary angiography', 'Abdominal CT', 'Provocation testing helps when baseline spirometry is normal.'],
+      ['A runner with otherwise normal lungs wheezes only after exercise. What is an appropriate treatment?', 'Albuterol before exercise', 'Avoid all exercise', 'Oral prednisone daily', 'Propranolol before exercise', 'Pretreatment with a short-acting beta-agonist is an established option.'],
+      ['A pregnant patient has well-controlled persistent asthma on budesonide. What is the best advice?', 'Continue the inhaled corticosteroid', 'Stop all inhalers until delivery', 'Replace it with oral steroids', 'Avoid albuterol during attacks', 'Good asthma control protects both mother and fetus.'],
+      ['A patient with asthma takes salmeterol alone. What change is most important?', 'Add an inhaled corticosteroid', 'Double salmeterol', 'Add a second long-acting beta-agonist', 'Add propranolol', 'Long-acting beta-agonist monotherapy increases serious asthma risk.'],
+      ['A patient with asthma needs migraine prevention. Which drug should be avoided?', 'Propranolol', 'Topiramate', 'Amitriptyline', 'Candesartan', 'Non-selective beta-blockers can provoke bronchospasm.'],
+      ['A patient has asthma, sinusitis, eosinophilia and new foot drop. What is the most likely diagnosis?', 'Eosinophilic granulomatosis with polyangiitis', 'Cystic fibrosis', 'Sarcoidosis', 'Alpha-1 antitrypsin deficiency', 'Asthma, eosinophilia and neuropathy suggest this vasculitis.'],
+      ['A patient has severe asthma, bronchiectasis, very high IgE and Aspergillus sensitization. What is the most likely diagnosis?', 'Allergic bronchopulmonary aspergillosis', 'Invasive aspergillosis in a neutropenic host', 'Pulmonary embolism', 'Sarcoidosis', 'These features are typical of this hypersensitivity disease.'],
+      ['A young woman has sudden episodes of inspiratory stridor despite normal spirometry between events. What is the most likely diagnosis?', 'Vocal cord dysfunction', 'Cough-variant asthma', 'COPD', 'Pulmonary fibrosis', 'Inspiratory stridor with normal testing between events suggests this diagnosis.'],
+      ['A patient is improving and ready for discharge after an exacerbation. Which plan is best?', 'Short oral corticosteroid course, controller therapy and early follow-up', 'Albuterol alone and no follow-up', 'Long-acting beta-agonist alone', 'Antibiotics for all patients', 'Discharge should reduce the risk of relapse.'],
+      ['A 65-year-old long-term smoker has fixed obstruction and a reduced DLCO. Which diagnosis is most likely?', 'COPD with emphysema', 'Cough-variant asthma', 'Vocal cord dysfunction', 'Normal aging', 'Fixed obstruction with low DLCO favors emphysema.'],
+      ['A patient with normal spirometry developed a dry cough soon after starting lisinopril. What is the best next step?', 'Stop lisinopril', 'Start high-dose inhaled steroids', 'Start omalizumab', 'Order bronchoscopy first', 'An ACE inhibitor is a common and reversible cause of cough.']
+    ]
+  }, {
+    id: 'depression', title: 'Depression', reference: 'USPSTF Depression Screening and APA Depression Guidelines',
+    easy: [
+      ['Which two items make up the PHQ-2?', 'Depressed mood and loss of interest', 'Sleep and appetite', 'Fatigue and concentration', 'Guilt and agitation', 'The PHQ-2 asks about depressed mood and anhedonia.'],
+      ['Which PHQ-9 score is commonly used as a positive screen?', '10 or higher', '1 or higher', '3 or higher', '25 or higher', 'A score of 10 or higher is the commonly used cutoff.'],
+      ['What is the minimum duration of symptoms for major depressive disorder?', '2 weeks', '2 days', '6 months', '2 years', 'DSM criteria require at least 2 weeks.'],
+      ['How many DSM symptoms are needed for major depressive disorder?', 'At least 5 of 9', 'At least 2 of 9', 'At least 3 of 9', 'All 9', 'At least 5 are needed, including low mood or anhedonia.'],
+      ['Which is a selective serotonin reuptake inhibitor?', 'Sertraline', 'Bupropion', 'Mirtazapine', 'Venlafaxine', 'Sertraline is an SSRI.'],
+      ['Which adverse effect is common with SSRIs?', 'Sexual dysfunction', 'Hyperkalemia', 'Hair growth', 'Gingival hyperplasia', 'Sexual dysfunction is a common SSRI effect.'],
+      ['How long is an adequate antidepressant trial before judging full response?', 'About 4 to 8 weeks', 'About 1 day', 'About 3 days', 'About 1 year', 'Full response usually needs several weeks at an adequate dose.'],
+      ['Which psychotherapy has strong evidence for depression?', 'Cognitive behavioral therapy', 'Hypnosis alone', 'Aromatherapy', 'Bed rest', 'Cognitive behavioral therapy is an established treatment.'],
+      ['Which condition contraindicates bupropion?', 'Seizure disorder', 'Hypothyroidism', 'Osteoarthritis', 'Migraine', 'Bupropion lowers the seizure threshold.'],
+      ['Which antidepressant is less likely to cause sexual dysfunction?', 'Bupropion', 'Paroxetine', 'Sertraline', 'Citalopram', 'Bupropion has low rates of sexual dysfunction.'],
+      ['Which effects are typical of mirtazapine?', 'Sedation and weight gain', 'Insomnia and weight loss', 'Seizures and hair loss', 'Dry cough and edema', 'Mirtazapine commonly causes sedation and increased appetite.'],
+      ['What does the USPSTF recommend about depression screening in adults?', 'Screen adults, including pregnant and postpartum patients', 'Screen only those older than 80', 'Do not screen any adults', 'Screen only with brain imaging', 'The USPSTF recommends screening adults.'],
+      ['Which tool is designed for postpartum depression screening?', 'Edinburgh Postnatal Depression Scale', 'CAGE questionnaire', 'Mini-Cog', 'AUDIT-C', 'The Edinburgh scale is designed for the perinatal period.'],
+      ['The antidepressant boxed warning concerns suicidality in patients up to which age?', '24 years', '12 years', '45 years', '65 years', 'The warning applies to children, adolescents and young adults through age 24.'],
+      ['Which question must be asked in every patient with depression?', 'Whether the patient has thoughts of suicide', 'Whether the patient likes exercise', 'What the patient ate today', 'How many siblings the patient has', 'Safety assessment is essential.']
+    ],
+    medium: [
+      ['How long should an antidepressant generally continue after remission of a first episode?', 'At least 6 months', '1 week', '2 weeks', 'Stop as soon as symptoms improve', 'Continuation for at least several months reduces relapse.'],
+      ['Why screen for bipolar disorder before starting an antidepressant?', 'Monotherapy can trigger mania', 'Antidepressants cure bipolar disorder', 'Bipolar disorder contraindicates all therapy', 'It predicts hypothyroidism', 'Antidepressant monotherapy can induce mania.'],
+      ['Which test is useful when fatigue and low mood suggest a medical cause?', 'TSH', 'Serum amylase', 'Blood culture', 'Urine porphobilinogen', 'Hypothyroidism can mimic depression.'],
+      ['Which SSRI is especially associated with discontinuation symptoms?', 'Paroxetine', 'Fluoxetine', 'Bupropion', 'Mirtazapine', 'Its short half-life makes discontinuation symptoms common.'],
+      ['Which findings suggest serotonin syndrome?', 'Hyperthermia, clonus and agitation', 'Bradycardia and hypothermia', 'Lead-pipe rigidity with bradykinesia only', 'Flaccid paralysis', 'Clonus and hyperreflexia are characteristic.'],
+      ['Which antibiotic can cause serotonin syndrome with an SSRI?', 'Linezolid', 'Amoxicillin', 'Cephalexin', 'Doxycycline', 'Linezolid has weak MAO inhibitor activity.'],
+      ['High-dose citalopram raises concern for which ECG finding?', 'QT prolongation', 'Delta waves', 'Epsilon waves', 'Short PR interval', 'Citalopram causes dose-related QT prolongation.'],
+      ['Combining an SSRI with an NSAID increases the risk of what?', 'Gastrointestinal bleeding', 'Hyperkalemia', 'Hypothyroidism', 'Cataracts', 'SSRIs impair platelet serotonin uptake.'],
+      ['Which electrolyte disturbance is a concern with SSRIs in older adults?', 'Hyponatremia', 'Hypernatremia', 'Hyperkalemia', 'Hypercalcemia', 'SSRIs can cause SIADH.'],
+      ['Which antidepressant can raise blood pressure in a dose-related way?', 'Venlafaxine', 'Sertraline', 'Mirtazapine', 'Escitalopram', 'Venlafaxine can cause dose-related hypertension.'],
+      ['Which treatment is used for tricyclic overdose with a wide QRS?', 'Sodium bicarbonate', 'Flumazenil', 'Propranolol', 'Naloxone', 'Sodium bicarbonate narrows the QRS and reduces arrhythmia risk.'],
+      ['Which antidepressant also helps diabetic neuropathic pain?', 'Duloxetine', 'Fluoxetine', 'Bupropion', 'Trazodone', 'Duloxetine has an indication for diabetic neuropathic pain.'],
+      ['What is a reasonable step after partial response to a low SSRI dose at 6 weeks?', 'Increase the dose', 'Stop treatment abruptly', 'Add a second SSRI', 'Declare treatment failure at once', 'The dose should be optimized first.'],
+      ['What is the minimum duration of persistent depressive disorder in adults?', '2 years', '2 weeks', '2 months', '10 years', 'Persistent depressive disorder lasts at least 2 years in adults.'],
+      ['How do postpartum blues typically behave?', 'They resolve within about 2 weeks', 'They last at least a year', 'They begin 6 months after delivery', 'They always include psychosis', 'Blues are mild and short-lived.']
+    ],
+    hard: [
+      ['A patient with severe depression has a suicide plan and access to the means. What is the best next step?', 'Arrange emergency psychiatric evaluation and safety measures', 'Schedule a visit in 3 months', 'Start an SSRI and send the patient home alone', 'Give a pamphlet only', 'An active plan with access to means requires urgent action.'],
+      ['A patient with depression once had a week of elevated mood, little sleep and overspending. What should be avoided?', 'Antidepressant monotherapy', 'Psychiatric referral', 'Mood stabilizer evaluation', 'A careful family history', 'This history suggests bipolar disorder.'],
+      ['A patient with low mood has fatigue, weight gain, cold intolerance and constipation. What should be checked first?', 'TSH', 'Serum lipase', 'Blood cultures', 'Head CT', 'These symptoms suggest hypothyroidism.'],
+      ['After 8 weeks of adherent maximum-dose sertraline, there is no response. What is the best next step?', 'Switch or augment the treatment', 'Continue unchanged for 2 years', 'Stop and offer no treatment', 'Lower the dose', 'An adequate trial has failed, so the plan should change.'],
+      ['A 74-year-old recently started on sertraline has confusion and a sodium of 122 mEq/L. What is the most likely cause?', 'SSRI-induced SIADH', 'Primary polydipsia as the only option', 'Diabetes insipidus', 'Mineralocorticoid excess', 'Older adults are at particular risk of SSRI-associated hyponatremia.'],
+      ['A patient on fluoxetine who just started tramadol has fever, agitation, clonus and hyperreflexia. What is the best initial management?', 'Stop both drugs and give supportive care', 'Add linezolid', 'Add a second SSRI', 'Continue both and recheck in a week', 'This is serotonin syndrome.'],
+      ['A patient with depression also wants to quit smoking and is worried about weight gain. Which drug fits best?', 'Bupropion', 'Mirtazapine', 'Paroxetine', 'Amitriptyline', 'Bupropion helps smoking cessation and is not usually linked to weight gain.'],
+      ['A patient with epilepsy needs treatment for depression. Which drug should be avoided?', 'Bupropion', 'Sertraline', 'Escitalopram', 'Fluoxetine', 'Bupropion lowers the seizure threshold.'],
+      ['A patient after a tricyclic overdose has a QRS of 150 ms and hypotension. What is the priority treatment?', 'Intravenous sodium bicarbonate', 'Flumazenil', 'Physostigmine', 'Procainamide', 'Sodium channel blockade is treated with bicarbonate.'],
+      ['Days after stopping paroxetine abruptly, a patient has dizziness and electric shock sensations. What is the best management?', 'Restart it and taper gradually', 'Order brain MRI first', 'Start phenytoin', 'Reassure and forbid any antidepressant for life', 'This is antidepressant discontinuation syndrome.'],
+      ['Three days after delivery, a patient is tearful and irritable but functions and has no suicidal thoughts. What is the best management?', 'Reassurance, support and follow-up', 'Emergency psychiatric admission', 'Start an antipsychotic', 'Start electroconvulsive therapy', 'This fits postpartum blues.'],
+      ['Four weeks after delivery, a patient has delusions about the baby and hallucinations. What is the best management?', 'Treat as an emergency with urgent psychiatric admission', 'Reassure and review in 3 months', 'Start a sleep hygiene program alone', 'Recommend herbal therapy', 'Postpartum psychosis endangers both mother and baby.'],
+      ['An older adult with depression has insomnia and poor appetite with weight loss. Which drug may be helpful?', 'Mirtazapine', 'Bupropion', 'Methylphenidate as first-line therapy', 'Venlafaxine at maximum dose', 'Mirtazapine promotes sleep and appetite.'],
+      ['After a first episode, a patient reached remission 3 months into SSRI treatment and wants to stop. What is the best advice?', 'Continue for several more months, then taper', 'Stop abruptly today', 'Double the dose', 'Add a second SSRI', 'Early discontinuation raises the risk of relapse.'],
+      ['Six weeks after a spouse died, a patient has waves of sadness focused on the loss, with intact self-worth and no suicidal thoughts. What is the best management?', 'Support and follow-up', 'Immediate electroconvulsive therapy', 'Start lithium', 'Admit to hospital', 'This pattern fits normal grief, and follow-up can identify depression if it develops.']
+    ]
+  }, {
+    id: 'prevention', title: 'Preventive Care and Screening', reference: 'USPSTF Recommendations and CDC Adult Immunization Schedule',
+    easy: [
+      ['At what age does the USPSTF recommend starting colorectal cancer screening in average-risk adults?', '45', '35', '40', '60', 'Screening starts at age 45.'],
+      ['What is the usual colonoscopy interval after a normal result in average-risk adults?', '10 years', '1 year', '3 years', '20 years', 'A normal colonoscopy is repeated in 10 years.'],
+      ['How often is FIT repeated for colorectal screening?', 'Every year', 'Every 5 years', 'Every 10 years', 'Only once', 'FIT is done annually.'],
+      ['At what age does cervical cancer screening begin under USPSTF guidance?', '21', '16', '25', '30', 'USPSTF screening starts at age 21.'],
+      ['How often is cytology alone done for women aged 21 to 29?', 'Every 3 years', 'Every year', 'Every 5 years', 'Every 10 years', 'Cytology alone is done every 3 years.'],
+      ['Which test is used for lung cancer screening?', 'Low-dose CT', 'Chest radiograph', 'Sputum cytology', 'PET scan', 'Annual low-dose CT is the screening test.'],
+      ['Who should receive one-time abdominal aortic aneurysm screening?', 'Men aged 65 to 75 who have ever smoked', 'All women older than 40', 'All men older than 40', 'Only adults with back pain', 'One-time ultrasound screening is recommended for this group.'],
+      ['At what age does the USPSTF recommend osteoporosis screening for women?', '65', '40', '50', '80', 'Women aged 65 and older should be screened.'],
+      ['How often is a tetanus-diphtheria booster recommended for adults?', 'Every 10 years', 'Every year', 'Every 3 years', 'Every 25 years', 'A Td or Tdap booster is given every 10 years.'],
+      ['How often is influenza vaccination recommended for adults?', 'Every year', 'Every 5 years', 'Every 10 years', 'Once in a lifetime', 'Influenza vaccine is given annually.'],
+      ['What does the 2024 USPSTF statement recommend for breast cancer screening?', 'Mammography every 2 years from age 40 to 74', 'Mammography every year from age 21', 'Mammography every 5 years from age 60', 'Self-examination only', 'The statement recommends biennial screening from 40 to 74.'],
+      ['At what age is HPV vaccination routinely recommended?', '11 to 12 years', '1 to 2 years', '30 to 35 years', '60 to 65 years', 'Routine vaccination is at 11 to 12 years.'],
+      ['Which adults should be screened at least once for hepatitis C under USPSTF guidance?', 'Ages 18 to 79', 'Ages 50 to 59 only', 'Only those older than 80', 'Only those with jaundice', 'One-time screening is recommended from 18 to 79.'],
+      ['Which age range is recommended for routine HIV screening under USPSTF guidance?', '15 to 65 years', '40 to 50 years', '65 to 85 years', '5 to 10 years', 'Routine screening covers ages 15 to 65.'],
+      ['At what age is recombinant zoster vaccine routinely recommended?', '50 years', '18 years', '30 years', '80 years', 'Routine vaccination starts at age 50.']
+    ],
+    medium: [
+      ['After how many years since quitting does lung cancer screening usually stop?', '15 years', '1 year', '5 years', '30 years', 'Screening usually stops after 15 years without smoking.'],
+      ['How is colorectal screening decided between ages 76 and 85?', 'Selectively, based on the individual', 'It is required for everyone', 'It is performed yearly by colonoscopy', 'It is always forbidden', 'The decision is individualized in this age group.'],
+      ['When can cervical screening stop in average-risk women?', 'After 65 with adequate prior negative screening', 'After 40 regardless of history', 'After the first negative test', 'After menopause regardless of history', 'Screening stops after 65 with adequate prior negative tests.'],
+      ['Is cervical screening needed after total hysterectomy for benign disease with no high-grade history?', 'No', 'Yes, yearly', 'Yes, every 3 years', 'Yes, until age 90', 'Without a cervix and high-grade history, screening is not needed.'],
+      ['Which group should be screened routinely for chlamydia and gonorrhea?', 'Sexually active women aged 24 or younger', 'All men older than 65', 'All children younger than 10', 'Only symptomatic patients', 'The USPSTF recommends this routine screening.'],
+      ['What does the USPSTF recommend about PSA screening at ages 55 to 69?', 'An individual shared decision', 'Mandatory yearly screening', 'Screening is never discussed', 'Biopsy without PSA', 'The decision should follow a discussion of benefits and harms.'],
+      ['What does the USPSTF recommend about PSA screening at age 70 and older?', 'Against routine screening', 'Yearly screening', 'Screening every 2 years', 'Screening only without discussion', 'The USPSTF recommends against routine screening at this age.'],
+      ['What is the interval for primary HPV testing at ages 30 to 65?', 'Every 5 years', 'Every year', 'Every 2 years', 'Every 15 years', 'Primary HPV testing is done every 5 years.'],
+      ['What is the interval for cytology with HPV co-testing at ages 30 to 65?', 'Every 5 years', 'Every year', 'Every 2 years', 'Every 15 years', 'Co-testing is done every 5 years.'],
+      ['A patient has a first-degree relative with colorectal cancer diagnosed before age 60. When is colonoscopy commonly started?', 'At age 40, or 10 years before the relative diagnosis', 'At age 60', 'At age 75', 'Screening is not needed', 'Earlier screening is commonly advised for this history.'],
+      ['At what age is pneumococcal vaccination routinely recommended for all adults under the current CDC schedule?', '50 years', '18 years', '30 years', '80 years', 'The CDC schedule recommends it from age 50.'],
+      ['Which group fits the USPSTF statin recommendation for primary prevention?', 'Ages 40 to 75 with a risk factor and 10-year risk of 10% or more', 'All adults aged 20 to 30', 'Only adults older than 90', 'All children with obesity', 'This is the group with the clearest benefit.'],
+      ['What does the USPSTF recommend about ovarian cancer screening in average-risk women?', 'Against screening', 'Yearly CA-125', 'Yearly transvaginal ultrasound', 'CA-125 plus ultrasound every 2 years', 'The USPSTF recommends against screening without symptoms.'],
+      ['What does the USPSTF recommend about starting aspirin for primary prevention at age 60 or older?', 'Against starting it', 'Start it in everyone', 'Start it at high dose', 'Start it only without risk assessment', 'Bleeding risk outweighs net benefit in this group.'],
+      ['Which adult group is universally recommended for hepatitis B vaccination?', 'Ages 19 to 59', 'Only health care workers', 'Only those older than 70', 'Only those with cirrhosis', 'Vaccination is universal for this age group.']
+    ],
+    hard: [
+      ['A 48-year-old average-risk adult has never had colorectal screening. What should be advised?', 'Start screening now', 'Wait until age 60', 'No screening is needed', 'Order CEA instead', 'Screening is recommended from age 45.'],
+      ['A 68-year-old man who smoked for 20 years asks about preventive tests. Which one-time test is indicated?', 'Abdominal aortic ultrasound', 'Abdominal CT with contrast', 'Coronary angiography', 'Serum CA-19-9', 'One-time ultrasound is recommended for this group.'],
+      ['A 58-year-old with 30 pack-years who quit 5 years ago is otherwise well. What is recommended?', 'Annual low-dose CT', 'Annual chest radiograph', 'No screening', 'Sputum cytology every year', 'The patient meets lung screening criteria.'],
+      ['A 70-year-old with 40 pack-years quit smoking 20 years ago. What is recommended?', 'No lung cancer screening', 'Annual low-dose CT', 'Annual chest radiograph', 'PET scan every year', 'The time since quitting exceeds 15 years.'],
+      ['A 67-year-old with consistently adequate negative cervical screening and no high-grade history asks about further tests. What is advised?', 'Stop cervical screening', 'Continue yearly cytology', 'Colposcopy now', 'Endometrial biopsy', 'She meets the criteria for stopping.'],
+      ['A 35-year-old had a total hysterectomy for fibroids with no history of dysplasia. What is advised about cervical screening?', 'No further screening', 'Yearly vaginal cytology', 'HPV testing every 3 years', 'Colposcopy every 5 years', 'Screening is not needed in this situation.'],
+      ['A 62-year-old man asks whether he should have a PSA test. What is the best approach?', 'Discuss benefits and harms, then decide together', 'Order PSA without discussion', 'Refuse any discussion', 'Order a prostate biopsy', 'Shared decision-making is recommended at this age.'],
+      ['A healthy 72-year-old man asks for routine PSA screening. What does the USPSTF advise?', 'It recommends against routine screening', 'It recommends yearly PSA', 'It recommends biopsy', 'It recommends PET imaging', 'Harms outweigh benefits at this age.'],
+      ['An average-risk patient has a positive FIT. What is the next step?', 'Colonoscopy', 'Repeat FIT in 5 years', 'No action', 'CT of the head', 'A positive stool test needs diagnostic colonoscopy.'],
+      ['A 35-year-old has a father diagnosed with colorectal cancer at age 50. When should colonoscopy start?', 'At age 40', 'At age 45 as for average risk', 'At age 50', 'At age 60', 'Age 40 is both the usual start and 10 years before the father was diagnosed.'],
+      ['A woman has family members with breast and ovarian cancer. What is the best approach?', 'Use a risk tool and refer for genetic counseling if positive', 'Order BRCA testing for all relatives without counseling', 'Recommend immediate mastectomy', 'Take no action', 'The USPSTF recommends risk assessment and counseling.'],
+      ['A patient on high-dose immunosuppression asks about vaccines. Which should be avoided?', 'MMR', 'Inactivated influenza', 'Tdap', 'Recombinant zoster', 'MMR is live and should be avoided.'],
+      ['A sexually active 23-year-old without symptoms visits for a checkup. Which screening is indicated?', 'Chlamydia and gonorrhea', 'Pelvic ultrasound', 'CA-125', 'Serum HSV antibodies', 'Routine screening is recommended at this age.'],
+      ['A 66-year-old woman has never had bone density testing. What is recommended?', 'Bone density testing', 'Wait until after a fracture', 'Spine MRI', 'Bone scan', 'Screening is recommended from age 65.'],
+      ['A 65-year-old has never received a pneumococcal vaccine. Which single-dose option is appropriate?', 'PCV20', 'PPSV23 only', 'Live attenuated vaccine', 'No vaccine', 'PCV20 or PCV21 alone completes the series.']
+    ]
+  }];
+
+  ORIGINAL_TOPICS.forEach(function (topic) {
+    var levels = {};
+    ['easy', 'medium', 'hard'].forEach(function (key) {
+      levels[key] = topic[key].map(function (item) {
+        return {
+          question: item[0], options: item.slice(1, 5), correct_index: 0,
+          explanation: item[5], reference: topic.reference
+        };
       });
-      html += '</ol>';
-    } else {
-      html += '<p>أجبت عن جميع الأسئلة بشكل صحيح. أحسنت!</p>';
-    }
-    html += '<p style="color:#5c6b72;font-size:.9em">هذه الأسئلة للمذاكرة فقط، فتحقق دائمًا من الإرشادات السريرية الحديثة.</p></div>';
- 
-    MailApp.sendEmail({
-      to: email,
-      subject: 'ذاكِر: نتيجتك ' + percent + '% (' + clean_(data.topic, 100) + ')',
-      htmlBody: html,
-      name: 'ذاكِر'
     });
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
- 
-function clean_(value, max) { return String(value == null ? '' : value).trim().slice(0, max); }
-function esc_(s) {
-  return String(s).replace(/[&<>"']/g, function (c) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    TOPICS.push({ id: topic.id, title: topic.title, levels: levels });
   });
-}
-function json_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}
- 
+
+  var LEVELS = [
+    { key: 'easy', name: 'سهل', color: 'var(--z-correct)', description: 'تذكّر المعلومات الأساسية.' },
+    { key: 'medium', name: 'متوسط', color: 'var(--z-amber)', description: 'فهم المعلومات والربط بينها.' },
+    { key: 'hard', name: 'صعب', color: 'var(--z-wrong)', description: 'تطبيق المعلومات على حالات سريرية.' }
+  ];
+  var STEPS = ['الدخول', 'الموضوع', 'الصعوبة', 'الأسئلة'];
+  var USER_KEY = 'zakir.page.user';
+  // ضع هنا رابط Google Apps Script (Web app URL) الذي ينتهي بـ /exec
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbzmkjW4UNNXglKN3BcDSf0ZR3O039QUUz7WUbZhdUs6Th4VNVS7OcmiJZljOZ5ZZYaX/exec';
+  var app = document.getElementById('zakir-app');
+  var state = { user: loadUser(), topic: null, level: null };
+
+  function loadUser() {
+    try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch (error) { return null; }
+  }
+  function saveUser(user) {
+    try {
+      if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+      else localStorage.removeItem(USER_KEY);
+    } catch (error) { /* The quiz still works for this visit without saved data. */ }
+  }
+  // الاتصال بـ Google Sheet. أي فشل يعيد null ولا يوقف الاختبار.
+  function sheetReady() { return /^https:\/\/script\.google\.com\//.test(SHEET_URL) && !!window.fetch; }
+  function readJson(response) { return response.json(); }
+  function postToSheet(payload) {
+    if (!sheetReady()) return Promise.resolve(null);
+    return fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(readJson).catch(function () { return null; });
+  }
+  function getHistory(email) {
+    if (!sheetReady()) return Promise.resolve(null);
+    return fetch(SHEET_URL + '?action=history&email=' + encodeURIComponent(email))
+      .then(readJson).catch(function () { return null; });
+  }
+  var ORDINALS = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
+  function testName(i) { return 'الاختبار ' + (ORDINALS[i] || ('رقم ' + (i + 1))); }
+  function formatDate(value) {
+    var date = new Date(value);
+    if (isNaN(date)) return '';
+    try {
+      return date.toLocaleString('ar-u-ca-gregory-nu-latn', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (error) { return date.toLocaleString(); }
+  }
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function button(className, text, onClick) {
+    var node = el('button', className, text);
+    node.type = 'button';
+    node.addEventListener('click', onClick);
+    return node;
+  }
+  function shuffle(list) {
+    var copy = list.slice();
+    for (var i = copy.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var swap = copy[i]; copy[i] = copy[j]; copy[j] = swap;
+    }
+    return copy;
+  }
+  function withShuffledOptions(question) {
+    var correct = question.options[question.correct_index];
+    var options = shuffle(question.options);
+    return Object.assign({}, question, { options: options, correct_index: options.indexOf(correct) });
+  }
+
+  // Clears the app, draws its header and returns the area for the current screen.
+  function screen(step) {
+    app.textContent = '';
+    var inner = el('div', 'z-inner');
+    app.appendChild(inner);
+    if (app.getBoundingClientRect().top < 0) app.scrollIntoView();
+    if (step === 1) return inner;
+
+    var head = el('div', 'z-head');
+    head.appendChild(el('span', 'z-brand', 'ذاكِر'));
+    var steps = el('div', 'z-steps');
+    STEPS.forEach(function (label, i) {
+      steps.appendChild(el('span', i + 1 === step ? 'is-current' : i + 1 < step ? 'is-done' : '', (i + 1) + '. ' + label));
+    });
+    head.appendChild(steps);
+    head.appendChild(button('z-btn z-ghost', 'خروج', function () {
+      state.user = null;
+      state.historyRequest = null;
+      saveUser(null);
+      showLogin();
+    }));
+    inner.appendChild(head);
+    return inner;
+  }
+
+  // Page 1
+  function showLogin() {
+    var root = screen(1);
+    var card = el('div', 'z-card z-login');
+    card.appendChild(el('h1', 'z-brand', 'ذاكِر'));
+    card.appendChild(el('p', 'z-muted', 'سجّل دخولك لبدء الاختبار.'));
+
+    function field(id, labelText, type) {
+      var wrap = el('div', 'z-field');
+      var label = el('label', '', labelText);
+      label.htmlFor = id;
+      var input = el('input');
+      input.id = id;
+      input.type = type;
+      var error = el('p', 'z-error');
+      error.hidden = true;
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') { event.preventDefault(); submit(); }
+      });
+      wrap.appendChild(label);
+      wrap.appendChild(input);
+      wrap.appendChild(error);
+      card.appendChild(wrap);
+      return { input: input, setError: function (message) {
+        error.textContent = message;
+        error.hidden = !message;
+        input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      } };
+    }
+
+    var name = field('zakir-name', 'الاسم', 'text');
+    name.input.autocomplete = 'name';
+    var email = field('zakir-email', 'البريد الإلكتروني', 'email');
+    email.input.autocomplete = 'email';
+    email.input.dir = 'ltr';
+
+    function submit() {
+      var nameValue = name.input.value.trim();
+      var emailValue = email.input.value.trim();
+      var nameError = nameValue.length >= 2 ? '' : 'اكتب اسمك (حرفان على الأقل).';
+      var emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? '' : 'اكتب بريدًا إلكترونيًا صحيحًا.';
+      name.setError(nameError);
+      email.setError(emailError);
+      if (nameError) { name.input.focus(); return; }
+      if (emailError) { email.input.focus(); return; }
+      state.user = { name: nameValue, email: emailValue };
+      saveUser(state.user);
+      state.historyRequest = postToSheet({ action: 'login', name: nameValue, email: emailValue, page: location.href });
+      showTopics();
+    }
+
+    card.appendChild(button('z-btn z-primary z-block', 'دخول', submit));
+    card.appendChild(el('p', 'z-hint', 'يُسجَّل الاسم والبريد لدى إدارة الموقع لمتابعة المشاركين.'));
+    root.appendChild(card);
+  }
+
+  // Page 2
+  function showTopics() {
+    var root = screen(2);
+    var title = el('div', 'z-title');
+    title.appendChild(el('h1', '', 'اختر الموضوع'));
+    var greeting = el('p', 'z-muted', 'أهلًا ' + state.user.name + '، ماذا تريد أن تراجع اليوم؟');
+    title.appendChild(greeting);
+    root.appendChild(title);
+    var historyBox = el('div', 'z-card z-history');
+    historyBox.hidden = !sheetReady();
+    historyBox.appendChild(el('h2', '', 'اختباراتك السابقة'));
+    var historyBody = el('div', 'z-history-body');
+    historyBody.appendChild(el('p', 'z-muted', 'جارٍ تحميل اختباراتك السابقة…'));
+    historyBox.appendChild(historyBody);
+    if (!state.historyRequest) state.historyRequest = getHistory(state.user.email);
+    state.historyRequest.then(function (data) {
+      historyBody.textContent = '';
+      if (!data || !data.ok) {
+        historyBody.appendChild(el('p', 'z-muted', 'تعذّر تحميل الاختبارات السابقة الآن.'));
+        return;
+      }
+      if (data.registered) greeting.textContent = 'أهلًا بعودتك ' + state.user.name + '، أنت مسجّل لدينا سابقًا.';
+      var tests = data.tests || [];
+      if (!tests.length) {
+        historyBody.appendChild(el('p', 'z-muted', data.registered ? 'لم تُكمل أي اختبار بعد.' : 'هذا أول دخول لك. ستظهر نتائج اختباراتك هنا.'));
+        return;
+      }
+      var list = el('div', 'z-history-list');
+      tests.forEach(function (test, i) {
+        var row = el('div', 'z-history-item');
+        var top = el('div', 'z-history-top');
+        top.appendChild(el('strong', '', testName(i)));
+        top.appendChild(el('span', 'z-history-score', test.score + ' من ' + test.total + ' (' + test.percent + '%)'));
+        row.appendChild(top);
+        var meta = el('p', 'z-muted z-history-meta', test.topic + ' · ' + test.level + ' · ' + formatDate(test.date));
+        meta.dir = 'auto';
+        row.appendChild(meta);
+        list.appendChild(row);
+      });
+      historyBody.appendChild(list);
+    });
+
+    var grid = el('div', 'z-grid');
+    TOPICS.forEach(function (topic) {
+      var card = el('div', 'z-card');
+      var heading = el('h2', '', topic.title);
+      heading.dir = 'auto';
+      card.appendChild(heading);
+      var total = LEVELS.reduce(function (sum, level) { return sum + topic.levels[level.key].length; }, 0);
+      card.appendChild(el('p', 'z-muted', total + ' سؤالًا متاحًا'));
+      var actions = el('div', 'z-actions');
+      actions.appendChild(button('z-btn z-primary', 'اختيار', function () {
+        state.topic = topic;
+        showLevels();
+      }));
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+    root.appendChild(grid);
+    historyBox.style.marginTop = '1.25rem';
+    root.appendChild(historyBox);
+  }
+
+  // Page 3
+  function showLevels() {
+    var root = screen(3);
+    root.appendChild(button('z-link', 'العودة إلى المواضيع', showTopics));
+    var title = el('div', 'z-title');
+    title.appendChild(el('h1', '', 'حدّد مستوى الصعوبة'));
+    var topicName = el('p', 'z-muted', state.topic.title);
+    topicName.dir = 'auto';
+    title.appendChild(topicName);
+    root.appendChild(title);
+
+    var list = el('div', 'z-levels');
+    LEVELS.forEach(function (level) {
+      var count = state.topic.levels[level.key].length;
+      var item = button('z-level', undefined, function () {
+        state.level = level;
+        showQuiz();
+      });
+      item.style.setProperty('--z-color', level.color);
+      item.disabled = count === 0;
+      item.appendChild(el('span', 'z-level-name', level.name));
+      item.appendChild(el('span', '', level.description));
+      item.appendChild(el('span', 'z-count', 'عدد الأسئلة: ' + count));
+      list.appendChild(item);
+    });
+    root.appendChild(list);
+    root.appendChild(el('p', 'z-hint', 'هذه الأسئلة للمذاكرة فقط وقد تحتوي على أخطاء، فتحقق من الإرشادات السريرية الحديثة.'));
+  }
+
+  // Page 4
+  function showQuiz() {
+    var questions = shuffle(state.topic.levels[state.level.key]).map(withShuffledOptions);
+    var index = 0;
+    var score = 0;
+    var missed = [];
+
+    function note(label, text) {
+      var box = el('div', 'z-note');
+      box.appendChild(el('strong', '', label));
+      var body = el('p', '', text);
+      body.dir = 'auto';
+      box.appendChild(body);
+      return box;
+    }
+    function appendSupport(parent, question) {
+      parent.appendChild(note('الشرح:', question.explanation));
+      if (question.source_quote) parent.appendChild(note('من المقال:', question.source_quote));
+      if (question.reference) parent.appendChild(note('للمراجعة:', question.reference));
+    }
+
+    function showQuestion() {
+      var question = questions[index];
+      var root = screen(4);
+      root.appendChild(button('z-link', 'تغيير مستوى الصعوبة', showLevels));
+
+      var progress = el('div', 'z-progress');
+      progress.appendChild(el('span', '', 'السؤال ' + (index + 1) + ' من ' + questions.length));
+      progress.appendChild(el('span', '', 'المستوى: ' + state.level.name + ' · النتيجة: ' + score));
+      root.appendChild(progress);
+      var bar = el('div', 'z-bar');
+      var fill = el('div', 'z-fill');
+      fill.style.width = ((index + 1) / questions.length * 100) + '%';
+      bar.appendChild(fill);
+      root.appendChild(bar);
+
+      var card = el('div', 'z-card');
+      var stem = el('h1', 'z-stem', question.question);
+      stem.dir = 'auto';
+      stem.tabIndex = -1;
+      card.appendChild(stem);
+
+      var options = el('div', 'z-options');
+      var buttons = question.options.map(function (text, optionIndex) {
+        var option = button('z-option', undefined, function () { answer(optionIndex); });
+        option.dir = 'auto';
+        option.appendChild(el('span', '', text));
+        options.appendChild(option);
+        return option;
+      });
+      card.appendChild(options);
+
+      var feedback = el('div', 'z-feedback');
+      feedback.setAttribute('role', 'status');
+      feedback.hidden = true;
+      card.appendChild(feedback);
+      root.appendChild(card);
+      stem.focus({ preventScroll: true });
+
+      function answer(chosen) {
+        var isCorrect = chosen === question.correct_index;
+        if (isCorrect) score++;
+        else missed.push(question);
+
+        buttons.forEach(function (option, optionIndex) {
+          option.disabled = true;
+          if (optionIndex === question.correct_index) {
+            option.classList.add('is-correct');
+            option.appendChild(el('span', 'z-mark', '✓ الإجابة الصحيحة'));
+          } else if (optionIndex === chosen) {
+            option.classList.add('is-wrong');
+            option.appendChild(el('span', 'z-mark', '✗ إجابتك'));
+          }
+        });
+
+        feedback.hidden = false;
+        feedback.appendChild(el('strong', isCorrect ? 'z-text-correct' : 'z-text-wrong', isCorrect ? 'إجابة صحيحة' : 'إجابة غير صحيحة'));
+        appendSupport(feedback, question);
+        var next = button('z-btn z-primary', index + 1 < questions.length ? 'السؤال التالي' : 'عرض النتيجة', function () {
+          index++;
+          if (index < questions.length) showQuestion();
+          else showResults();
+        });
+        feedback.appendChild(next);
+        next.focus({ preventScroll: true });
+      }
+    }
+
+    function showResults() {
+      var root = screen(4);
+      var percent = Math.round(score / questions.length * 100);
+      var card = el('div', 'z-card z-results');
+      card.appendChild(el('p', 'z-score', percent + '%'));
+      card.appendChild(el('h1', '', 'إجاباتك الصحيحة: ' + score + ' من ' + questions.length));
+      card.appendChild(el('p', 'z-muted',
+        percent >= 80 ? 'نتيجة ممتازة. جرّب مستوى أعلى.' :
+        percent >= 50 ? 'نتيجة جيدة. راجع الإجابات أدناه ثم أعد المحاولة.' :
+        'راجع الموضوع ثم أعد المحاولة.'));
+      var actions = el('div', 'z-actions z-center');
+      actions.appendChild(button('z-btn z-primary', 'جولة جديدة', showQuiz));
+      actions.appendChild(button('z-btn z-secondary', 'موضوع آخر', showTopics));
+      card.appendChild(actions);
+      root.appendChild(card);
+
+      if (sheetReady()) {
+        var mailStatus = el('p', 'z-hint', 'جارٍ إرسال النتيجة إلى بريدك…');
+        card.appendChild(mailStatus);
+        var request = postToSheet({
+          action: 'result', name: state.user.name, email: state.user.email,
+          topic: state.topic.title, level: state.level.name,
+          score: score, total: questions.length, percent: percent,
+          missed: missed.map(function (q) { return { question: q.question, answer: q.options[q.correct_index] }; })
+        });
+        state.historyRequest = request.then(function (data) {
+          return data && data.ok ? data : getHistory(state.user.email);
+        });
+        request.then(function (data) {
+          if (data && data.ok && data.mailed) {
+            mailStatus.textContent = 'أُرسلت النتيجة إلى ' + state.user.email + ' (' + testName((data.tests || []).length - 1) + ').';
+          } else {
+            mailStatus.textContent = 'تعذّر إرسال النتيجة إلى البريد هذه المرة.';
+          }
+        });
+      }
+
+      if (missed.length) {
+        var review = el('div', 'z-review');
+        review.appendChild(el('h2', '', 'الأسئلة التي تحتاج إلى مراجعة'));
+        missed.forEach(function (question) {
+          var item = el('div', 'z-card');
+          var stem = el('p', 'z-review-stem', question.question);
+          stem.dir = 'auto';
+          var correct = el('p', '', question.options[question.correct_index]);
+          correct.dir = 'auto';
+          item.appendChild(stem);
+          item.appendChild(el('p', 'z-text-correct z-label', '✓ الإجابة الصحيحة'));
+          item.appendChild(correct);
+          appendSupport(item, question);
+          review.appendChild(item);
+        });
+        root.appendChild(review);
+      }
+    }
+
+    showQuestion();
+  }
+
+  if (state.user) showTopics();
+  else showLogin();
+})();
+</script>
