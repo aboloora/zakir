@@ -8,7 +8,7 @@
 #zakir-app {
   --z-bg: #f4f1ea; --z-surface: #fffdf8; --z-ink: #1c2b33; --z-muted: #5c6b72; --z-line: #dcd6c8;
   --z-accent: #0f5e63; --z-soft: #dcecea; --z-correct: #17693d; --z-correct-soft: #e0f2e6;
-  --z-wrong: #a83232; --z-wrong-soft: #fae6e4; --z-amber: #8a5a0b;
+  --z-wrong: #a83232; --z-wrong-soft: #fae6e4; --z-amber: #8a5a0b; --z-expert: #5b2a86;
   background: var(--z-bg); color: var(--z-ink); padding: 1rem; border-radius: 8px;
   font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; font-size: 16px; line-height: 1.65; text-align: start;
 }
@@ -50,7 +50,7 @@
 #zakir-app .z-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
 #zakir-app .z-center { justify-content: center; margin-top: 1.25rem; }
 #zakir-app .z-levels { display: grid; gap: .9rem; }
-#zakir-app .z-level { display: grid; grid-template-columns: 6rem 1fr auto; align-items: center; gap: 1rem; width: 100%; margin: 0; background: var(--z-surface); border: 1px solid var(--z-line); border-inline-start: 6px solid var(--z-color); border-radius: 8px; padding: 1.1rem; color: var(--z-ink); font: inherit; text-align: start; cursor: pointer; }
+#zakir-app .z-level { display: grid; grid-template-columns: 8rem 1fr auto; align-items: center; gap: 1rem; width: 100%; margin: 0; background: var(--z-surface); border: 1px solid var(--z-line); border-inline-start: 6px solid var(--z-color); border-radius: 8px; padding: 1.1rem; color: var(--z-ink); font: inherit; text-align: start; cursor: pointer; }
 #zakir-app .z-level:hover { background: var(--z-soft); }
 #zakir-app .z-level-name { font-size: 1.25rem; font-weight: 700; }
 #zakir-app .z-count { color: var(--z-muted); font-size: .88rem; }
@@ -74,6 +74,9 @@
 #zakir-app .z-review { display: grid; gap: .75rem; margin-top: 1.5rem; }
 #zakir-app .z-review-stem { margin-bottom: .5rem; font-weight: 500; }
 #zakir-app .z-label { font-size: .85rem; font-weight: 700; }
+#zakir-app .z-badge { display: inline-block; margin-bottom: .5rem; padding: .1rem .55rem; background: var(--z-soft); color: var(--z-accent); border-radius: 999px; font-size: .8rem; font-weight: 700; }
+#zakir-app .z-tight { margin-top: .35rem; }
+#zakir-app .z-files-status { margin-bottom: 1rem; }
 #zakir-app .z-history h2 { margin-bottom: .75rem; }
 #zakir-app .z-history-list { display: grid; gap: .5rem; }
 #zakir-app .z-history-item { padding: .6rem .8rem; border: 1px solid var(--z-line); border-radius: 6px; }
@@ -428,10 +431,13 @@
   });
 
   var LEVELS = [
-    { key: 'easy', name: 'سهل', color: 'var(--z-correct)', description: 'تذكّر المعلومات الأساسية.' },
-    { key: 'medium', name: 'متوسط', color: 'var(--z-amber)', description: 'فهم المعلومات والربط بينها.' },
-    { key: 'hard', name: 'صعب', color: 'var(--z-wrong)', description: 'تطبيق المعلومات على حالات سريرية.' }
+    { key: 'easy', name: 'مبتدئ', color: 'var(--z-correct)', description: 'معلومة واحدة مهمة: الحدود والأرقام والعلاج الأول وأعمار الفحص.' },
+    { key: 'medium', name: 'متوسط', color: 'var(--z-amber)', description: 'ربط المعلومات وتفسير الفحوصات والمقارنة بين الحالات والأدوية.' },
+    { key: 'hard', name: 'صعب', color: 'var(--z-wrong)', description: 'حالات سريرية بأسلوب البورد فيها تفصيل يغيّر الإجابة.' },
+    { key: 'expert', name: 'عالي الصعوبة', color: 'var(--z-expert)', description: 'حالات مركّبة بخيارات متقاربة لا يفرّقها إلا تفصيل حاسم.' }
   ];
+  // عدد الأسئلة في كل اختبار، تُختار عشوائيًا من بنك المستوى.
+  var QUIZ_LENGTH = 20;
   var STEPS = ['الدخول', 'الموضوع', 'الصعوبة', 'الأسئلة'];
   var USER_KEY = 'zakir.page.user';
   // ضع هنا رابط Google Apps Script (Web app URL) الذي ينتهي بـ /exec
@@ -464,6 +470,17 @@
     return fetch(SHEET_URL + '?action=history&email=' + encodeURIComponent(email))
       .then(readJson).catch(function () { return null; });
   }
+  // مواضيع ملفات Drive وأسئلتها، من ورقة "الأسئلة".
+  function getFileTopics() {
+    if (!sheetReady()) return Promise.resolve(null);
+    return fetch(SHEET_URL + '?action=topics').then(readJson).catch(function () { return null; });
+  }
+  function getTopicQuestions(id) {
+    if (!sheetReady()) return Promise.resolve(null);
+    return fetch(SHEET_URL + '?action=questions&id=' + encodeURIComponent(id))
+      .then(readJson).catch(function () { return null; });
+  }
+  function bankOf(topic, key) { return (topic.levels && topic.levels[key]) || []; }
   var ORDINALS = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
   function testName(i) { return 'الاختبار ' + (ORDINALS[i] || ('رقم ' + (i + 1))); }
   function formatDate(value) {
@@ -557,7 +574,7 @@
 
     var name = field('zakir-name', 'الاسم', 'text');
     name.input.autocomplete = 'name';
-    var email = field('zakir-email', ' البريد الإلكتروني لابد من أن يكون الايميل صحيح', 'email');
+    var email = field('zakir-email', 'البريد الإلكتروني', 'email');
     email.input.autocomplete = 'email';
     email.input.dir = 'ltr';
 
@@ -623,13 +640,29 @@
       historyBody.appendChild(list);
     });
 
+    // مواضيع ملفات Drive: تُحمَّل من الـ Sheet وتظهر قبل المواضيع الثابتة.
+    var fileGrid = el('div', 'z-grid');
+    if (sheetReady()) {
+      var loading = el('p', 'z-muted z-files-status', 'جارٍ تحميل مواضيع ملفاتك…');
+      root.appendChild(loading);
+      root.appendChild(fileGrid);
+      getFileTopics().then(function (data) {
+        if (!data || !data.ok) { loading.textContent = 'تعذّر تحميل مواضيع ملفاتك الآن.'; return; }
+        var topics = (data.topics || []).filter(function (t) { return t.total > 0; });
+        if (!topics.length) { loading.hidden = true; return; }
+        loading.hidden = true;
+        topics.forEach(function (info) { fileGrid.appendChild(fileTopicCard(info)); });
+        fileGrid.style.marginBottom = '1rem';
+      });
+    }
+
     var grid = el('div', 'z-grid');
     TOPICS.forEach(function (topic) {
       var card = el('div', 'z-card');
       var heading = el('h2', '', topic.title);
       heading.dir = 'auto';
       card.appendChild(heading);
-      var total = LEVELS.reduce(function (sum, level) { return sum + topic.levels[level.key].length; }, 0);
+      var total = LEVELS.reduce(function (sum, level) { return sum + bankOf(topic, level.key).length; }, 0);
       card.appendChild(el('p', 'z-muted', total + ' سؤالًا متاحًا'));
       var actions = el('div', 'z-actions');
       actions.appendChild(button('z-btn z-primary', 'اختيار', function () {
@@ -642,6 +675,42 @@
     root.appendChild(grid);
     historyBox.style.marginTop = '1.25rem';
     root.appendChild(historyBox);
+  }
+
+  // بطاقة موضوع من ملف PDF في مجلد Drive.
+  function fileTopicCard(info) {
+    var card = el('div', 'z-card');
+    card.appendChild(el('span', 'z-badge', 'من ملفاتك'));
+    var heading = el('h2', '', info.title);
+    heading.dir = 'auto';
+    card.appendChild(heading);
+    card.appendChild(el('p', 'z-muted', info.total + ' سؤالًا متاحًا'));
+    if (info.status !== 'done' && info.partsTotal) {
+      card.appendChild(el('p', 'z-hint z-tight', 'التوليد مستمر: الجزء ' + Math.min(info.partsDone + 1, info.partsTotal) + ' من ' + info.partsTotal + '، وتزيد الأسئلة تلقائيًا.'));
+    }
+    var error = el('p', 'z-error');
+    error.hidden = true;
+    var actions = el('div', 'z-actions');
+    var choose = button('z-btn z-primary', 'اختيار', function () {
+      choose.disabled = true;
+      choose.textContent = 'جارٍ التحميل…';
+      error.hidden = true;
+      getTopicQuestions(info.id).then(function (data) {
+        if (!data || !data.ok) {
+          choose.disabled = false;
+          choose.textContent = 'اختيار';
+          error.textContent = 'تعذّر تحميل الأسئلة. حاول مرة أخرى.';
+          error.hidden = false;
+          return;
+        }
+        state.topic = { id: info.id, title: data.title || info.title, levels: data.levels || {}, fromFile: true };
+        showLevels();
+      });
+    });
+    actions.appendChild(choose);
+    card.appendChild(actions);
+    card.appendChild(error);
+    return card;
   }
 
   // Page 3
@@ -657,7 +726,7 @@
 
     var list = el('div', 'z-levels');
     LEVELS.forEach(function (level) {
-      var count = state.topic.levels[level.key].length;
+      var count = bankOf(state.topic, level.key).length;
       var item = button('z-level', undefined, function () {
         state.level = level;
         showQuiz();
@@ -666,7 +735,7 @@
       item.disabled = count === 0;
       item.appendChild(el('span', 'z-level-name', level.name));
       item.appendChild(el('span', '', level.description));
-      item.appendChild(el('span', 'z-count', 'عدد الأسئلة: ' + count));
+      item.appendChild(el('span', 'z-count', count ? 'بنك الأسئلة: ' + count : 'لا توجد أسئلة بعد'));
       list.appendChild(item);
     });
     root.appendChild(list);
@@ -675,7 +744,7 @@
 
   // Page 4
   function showQuiz() {
-    var questions = shuffle(state.topic.levels[state.level.key]).map(withShuffledOptions);
+    var questions = shuffle(bankOf(state.topic, state.level.key)).slice(0, QUIZ_LENGTH).map(withShuffledOptions);
     var index = 0;
     var score = 0;
     var missed = [];
