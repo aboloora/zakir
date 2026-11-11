@@ -1484,6 +1484,11 @@
       root.appendChild(fileGrid);
       getFileTopics().then(function (data) {
         if (!data || !data.ok) { loading.textContent = 'تعذّر تحميل مواضيع ملفاتك الآن.'; return; }
+        if (!Array.isArray(data.topics)) {
+          // The web app answered without a topics list: it is still running an older deployment.
+          loading.textContent = 'مواضيع ملفاتك غير متاحة بعد: يجب نشر نسخة جديدة من Apps Script.';
+          return;
+        }
         var topics = (data.topics || []).filter(function (t) { return t.total > 0; });
         if (!topics.length) { loading.hidden = true; return; }
         loading.hidden = true;
