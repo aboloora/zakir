@@ -417,6 +417,841 @@
     ]
   }];
 
+  // Expert-level questions for the built-in topics: [question, correct, wrong, wrong, wrong, explanation, source quote].
+  // The wrong options are from the same category as the answer and differ from it in one decisive detail.
+  var EXPERT = {
+ "sle": [
+  [
+   "A 34-year-old woman with SLE weighs 80 kg (ideal body weight 60 kg). Her rheumatologist wants the highest hydroxychloroquine dose the review allows. Which daily dose fits?",
+   "400 mg (5 mg/kg of actual body weight)",
+   "300 mg (5 mg/kg of ideal body weight)",
+   "480 mg (6 mg/kg of actual body weight)",
+   "520 mg (6.5 mg/kg of actual body weight)",
+   "The limit is 5 mg/kg/day or less of ACTUAL body weight: 5 x 80 = 400 mg. 300 mg uses ideal body weight, which is the older rule; 480 and 520 mg exceed 5 mg/kg.",
+   "Dose 5 mg/kg/day or less (actual body weight)"
+  ],
+  [
+   "A 45-year-old woman with SLE and stage 3 CKD has taken hydroxychloroquine for 2 years. Her baseline retinal exam was normal. What screening schedule now fits?",
+   "Annual retinal screening now, without waiting until year 5",
+   "Annual retinal screening starting after year 5",
+   "Retinal screening every 2 years starting now",
+   "Retinal screening only if visual symptoms appear",
+   "Without risk factors, annual screening starts after 5 years. Renal disease is a risk factor, so screening starts sooner. The closest wrong option is the standard after-5-years schedule, which does not apply to her.",
+   "Baseline retinal exam, then annually after 5 years"
+  ],
+  [
+   "A 29-year-old pregnant woman with SLE is anti-Ro (SSA) positive and anti-La negative. She is at 11 weeks. When should fetal echocardiography or PR-interval monitoring take place?",
+   "Weeks 16 to 26",
+   "Weeks 12 to 16",
+   "Weeks 26 to 34",
+   "Weeks 20 to 30",
+   "The window for congenital heart block surveillance is weeks 16 to 26. Weeks 20 to 30 overlaps it but starts late and misses the earliest period of risk.",
+   "fetal echocardiography / PR-interval monitoring (weeks 16-26) for congenital heart block"
+  ],
+  [
+   "A 31-year-old woman with stable SLE on hydroxychloroquine and azathioprine is 8 weeks pregnant. When should low-dose aspirin start to reduce preeclampsia risk?",
+   "From 12 weeks",
+   "Immediately, at 8 weeks",
+   "From 20 weeks",
+   "From 28 weeks",
+   "The review recommends low-dose aspirin from 12 weeks. Starting at 20 weeks is the closest wrong answer; it is later than recommended and loses part of the benefit.",
+   "Low-dose aspirin from 12 weeks to reduce preeclampsia risk."
+  ],
+  [
+   "A patient with SLE needs an MMR booster before travel. She takes no steroid-sparing drug. At which prednisone exposure does the review say live vaccines must be avoided?",
+   "20 mg/day or more for 2 weeks or longer",
+   "20 mg/day or more for 4 weeks or longer",
+   "10 mg/day or more for 2 weeks or longer",
+   "40 mg/day or more for 1 week or longer",
+   "The threshold is 20 mg/day or more for at least 2 weeks. The 4-week option uses the right dose but the wrong duration.",
+   "Avoid live vaccines ... on immunosuppressants or prednisone 20 mg/day or more for 2 weeks or longer."
+  ],
+  [
+   "A 30-year-old woman with lupus nephritis has been in complete remission for 4 months on azathioprine and hydroxychloroquine. She wants to conceive now. What is the best advice?",
+   "Wait until at least 6 months of quiescence",
+   "Conceive now, since 3 months of quiescence is enough",
+   "Wait until at least 12 months of quiescence",
+   "Conceive now if anti-dsDNA is negative",
+   "The review advises at least 6 months of disease quiescence. 12 months is the closest wrong option: safe, but longer than required.",
+   "Plan conception after at least 6 months of disease quiescence"
+  ],
+  [
+   "A woman with SLE and hypertension plans pregnancy. Which regimen can she continue unchanged through conception?",
+   "Hydroxychloroquine, azathioprine and prednisone",
+   "Hydroxychloroquine, azathioprine and losartan",
+   "Hydroxychloroquine, mycophenolate and prednisone",
+   "Hydroxychloroquine, methotrexate and prednisone",
+   "All three drugs in the correct option are listed as pregnancy-compatible. Each wrong option differs by one drug: losartan (an ARB), mycophenolate and methotrexate must all be stopped before conception.",
+   "Compatible: hydroxychloroquine, azathioprine, prednisone, tacrolimus, cyclosporine"
+  ],
+  [
+   "A 27-year-old woman has an ANA of 1:160, a positive anti-dsDNA, and low C3 and C4. She has no clinical findings. How does she fit the 2019 EULAR/ACR criteria?",
+   "Not classified: she has 10 points but no clinical criterion",
+   "Classified: she reaches 10 points",
+   "Not classified: she needs 12 points",
+   "Classified: the ANA titer plus anti-dsDNA is enough",
+   "Anti-dsDNA scores 6 and low C3 plus C4 scores 4, for 10 points. Classification also needs at least one clinical criterion, which she lacks. The closest wrong option forgets this second requirement.",
+   "classify as SLE with 10 or more points and at least one clinical criterion"
+  ],
+  [
+   "A patient has an ANA of 1:320. Which single additional finding is enough by itself to classify SLE under the 2019 EULAR/ACR criteria?",
+   "Biopsy-proven class III or IV lupus nephritis",
+   "Biopsy-proven class V lupus nephritis",
+   "Both anti-dsDNA and anti-Smith antibodies",
+   "Proteinuria above 0.5 g per 24 hours",
+   "Class III/IV nephritis scores 10 and is a clinical criterion, so it is enough alone. Class V scores only 8. Anti-dsDNA and anti-Smith share one domain, so they count once for 6 points.",
+   "Highest weights: class III/IV lupus nephritis = 10; class II/V = 8; anti-dsDNA or anti-Smith = 6."
+  ],
+  [
+   "A patient with SLE on mycophenolate has fever and arthralgia. ESR is 70 mm/h and CRP is 95 mg/L. How should the CRP be interpreted?",
+   "It points to infection or serositis rather than an uncomplicated flare",
+   "It confirms an uncomplicated flare, because CRP tracks ESR",
+   "It points to drug-induced lupus",
+   "It has no value, because CRP is unreliable in SLE",
+   "ESR rises with SLE activity, but CRP usually stays normal. A high CRP therefore suggests infection or serositis. The closest wrong option assumes CRP rises with ESR in a flare.",
+   "CRP is usually normal; a high CRP suggests infection or serositis"
+  ],
+  [
+   "A 38-year-old woman with SLE and antiphospholipid syndrome had a deep vein thrombosis. She is not pregnant. What long-term anticoagulation fits the review?",
+   "Lifelong warfarin",
+   "Lifelong apixaban",
+   "Warfarin for 6 months, then aspirin",
+   "Lifelong rivaroxaban",
+   "The review recommends lifelong warfarin after thrombosis and advises avoiding DOACs, which excludes apixaban and rivaroxaban. A 6-month course is too short for APS.",
+   "Lifelong warfarin after thrombosis (avoid DOACs)"
+  ],
+  [
+   "A 25-year-old woman with SLE and positive antiphospholipid antibodies wants hormonal contraception. Which method fits?",
+   "Levonorgestrel IUD",
+   "Combined oral contraceptive pill",
+   "Contraceptive vaginal ring",
+   "Contraceptive transdermal patch",
+   "All three wrong options contain estrogen, which is US MEC category 4 with antiphospholipid antibodies. The levonorgestrel IUD is progestin-only.",
+   "Avoid estrogen (pill, patch, ring) - US MEC category 4."
+  ],
+  [
+   "A patient with SLE needs a steroid-sparing drug. Which drug-and-monitoring pair matches the review?",
+   "Azathioprine: check TPMT before starting",
+   "Mycophenolate: check TPMT before starting",
+   "Methotrexate: check TPMT before starting",
+   "Hydroxychloroquine: check TPMT before starting",
+   "TPMT is checked before azathioprine because low activity causes severe myelosuppression. The other drugs are monitored differently (for example, methotrexate needs CBC, LFTs, creatinine and folic acid).",
+   "Azathioprine: Check TPMT before starting; CBC and LFTs"
+  ],
+  [
+   "A 60-year-old man on hydralazine has arthralgia, pleuritis and a positive anti-histone antibody. Complement is normal and urinalysis is clear. What is the best management?",
+   "Stop hydralazine and observe for resolution",
+   "Stop hydralazine and start lifelong hydroxychloroquine",
+   "Continue hydralazine and add prednisone",
+   "Stop hydralazine and start mycophenolate",
+   "This is drug-induced lupus, which resolves when the drug is stopped. Lifelong hydroxychloroquine is the closest wrong option; it treats SLE, not a reversible drug reaction.",
+   "Hydralazine + lupus symptoms + anti-histone: Drug-induced lupus - stop the drug"
+  ],
+  [
+   "A healthy 70-year-old woman has a low-titer positive ANA found on a routine panel. She has no symptoms or abnormal findings. What is the best next step?",
+   "Reassure her and do not refer",
+   "Repeat the ANA in 3 months and refer if still positive",
+   "Order anti-dsDNA and anti-Smith, and refer if either is positive",
+   "Refer routinely to rheumatology",
+   "Low-titer ANA is common in healthy older adults, so the review advises reassurance without referral. Extra antibody testing or repeat ANA adds no value without clinical suspicion.",
+   "Low-titer positive ANA is common in healthy people, especially older adults: reassure, do not refer."
+  ]
+ ],
+ "diabetes": [
+  [
+   "A 68-year-old with type 2 diabetes takes metformin 2,000 mg/day. His eGFR has fallen to 38 mL/min/1.73 m2. What should be done with metformin?",
+   "Continue it, reassess benefit and risk, and consider reducing the dose",
+   "Stop it immediately",
+   "Continue the full dose without reassessment",
+   "Stop it until eGFR rises above 60",
+   "Metformin is contraindicated below 30. Between 30 and 45 it is not started, but an existing prescription can continue after reassessment, often at a reduced dose. Stopping immediately is the rule below 30, not at 38.",
+   ""
+  ],
+  [
+   "An asymptomatic adult has an HbA1c of 6.8% and a fasting glucose of 132 mg/dL measured from the same blood sample. What is the correct interpretation?",
+   "Diabetes is confirmed by two concordant tests",
+   "Diabetes needs repeat testing on another day",
+   "Diabetes is confirmed only if symptoms are present",
+   "Diabetes is not confirmed because HbA1c is below 7%",
+   "Two different abnormal tests from the same sample confirm the diagnosis. Repeating on another day is needed only when a single test is abnormal.",
+   ""
+  ],
+  [
+   "A 45-year-old has a fasting glucose of 118 mg/dL and an HbA1c of 6.0%. How are these results classified?",
+   "Prediabetes",
+   "Diabetes",
+   "Normal glucose tolerance",
+   "Impaired fasting glucose with a normal HbA1c",
+   "Fasting glucose of 100 to 125 mg/dL and HbA1c of 5.7% to 6.4% both fall in the prediabetes range. The closest wrong option treats 6.0% as normal, but the cut-off is 5.7%.",
+   ""
+  ],
+  [
+   "A conscious patient on insulin has a glucose of 58 mg/dL. Which treatment sequence is correct?",
+   "15 to 20 g of glucose, then recheck in 15 minutes",
+   "15 to 20 g of glucose, then recheck in 30 minutes",
+   "30 to 40 g of glucose, then recheck in 15 minutes",
+   "5 g of glucose, then recheck in 15 minutes",
+   "The rule is 15 to 20 g of fast-acting glucose with a recheck after 15 minutes, repeating if still low. A 30-minute recheck delays repeat treatment.",
+   ""
+  ],
+  [
+   "A 55-year-old with type 2 diabetes and a prior myocardial infarction needs a second agent with proven cardiovascular benefit. His brother has MEN2A. Which drug fits best?",
+   "Empagliflozin",
+   "Semaglutide",
+   "Dulaglutide",
+   "Liraglutide",
+   "All four agents have shown cardiovascular benefit, but GLP-1 receptor agonists are contraindicated with a personal or family history of MEN2 because of the medullary thyroid carcinoma warning.",
+   ""
+  ],
+  [
+   "A 62-year-old with type 2 diabetes and heart failure with reduced ejection fraction has an HbA1c of 7.9% on metformin. Which addition is best?",
+   "Empagliflozin",
+   "Sitagliptin",
+   "Saxagliptin",
+   "Pioglitazone",
+   "SGLT2 inhibitors reduce heart failure hospitalization. Sitagliptin is the closest wrong option: it is neutral for heart failure but gives no benefit. Saxagliptin and pioglitazone can worsen heart failure.",
+   ""
+  ],
+  [
+   "A patient on dapagliflozin has 2 days of poor intake and vomiting. Glucose is 190 mg/dL, bicarbonate is 11 mEq/L, the anion gap is high and serum ketones are elevated. What is the diagnosis?",
+   "Euglycemic diabetic ketoacidosis",
+   "Starvation ketosis",
+   "Hyperosmolar hyperglycemic state",
+   "Metformin-associated lactic acidosis",
+   "Ketoacidosis with near-normal glucose on an SGLT2 inhibitor is euglycemic DKA. Starvation ketosis is the closest wrong option, but it rarely lowers bicarbonate below 18 mEq/L.",
+   ""
+  ],
+  [
+   "A patient taking empagliflozin is scheduled for elective surgery. When should the drug be stopped?",
+   "At least 3 days before surgery",
+   "The day before surgery",
+   "At least 7 days before surgery",
+   "Only on the morning of surgery",
+   "Empagliflozin, dapagliflozin and canagliflozin are stopped at least 3 days before scheduled surgery (ertugliflozin 4 days) to lower the risk of ketoacidosis. Stopping the day before is too late.",
+   ""
+  ],
+  [
+   "A patient on metformin for 9 years has numbness in both feet and an MCV of 108 fL. Which test is the best first step?",
+   "Serum vitamin B12",
+   "Serum folate",
+   "Serum TSH",
+   "Serum iron studies",
+   "Long-term metformin lowers vitamin B12, which causes both neuropathy and macrocytosis. Folate deficiency also causes macrocytosis but does not cause neuropathy.",
+   ""
+  ],
+  [
+   "A 58-year-old with type 2 diabetes, hypertension and an LDL of 130 mg/dL has no atherosclerotic disease. Which lipid therapy fits current ADA guidance?",
+   "High-intensity statin, aiming for an LDL below 70 mg/dL",
+   "Moderate-intensity statin, aiming for an LDL below 100 mg/dL",
+   "Moderate-intensity statin plus ezetimibe from the start",
+   "High-intensity statin plus a fibrate from the start",
+   "With diabetes, age 40 to 75 and an added cardiovascular risk factor, ADA advises a high-intensity statin with an LDL goal below 70 mg/dL. Moderate intensity fits patients without additional risk factors.",
+   ""
+  ],
+  [
+   "What is the blood pressure goal that ADA recommends for most adults with diabetes and hypertension?",
+   "Below 130/80 mmHg",
+   "Below 140/90 mmHg",
+   "Below 120/80 mmHg",
+   "Below 130/90 mmHg",
+   "ADA recommends a goal below 130/80 mmHg when it can be reached safely. 140/90 mmHg is an older goal.",
+   ""
+  ],
+  [
+   "Three weeks after starting lisinopril, a patient with diabetic kidney disease has a 15% rise in creatinine with a normal potassium. What should be done?",
+   "Continue lisinopril and monitor",
+   "Stop lisinopril because creatinine rose more than 10%",
+   "Switch to losartan",
+   "Stop lisinopril and start amlodipine",
+   "A rise of up to about 30% is expected with renin-angiotensin blockade and is not a reason to stop. Switching to an ARB brings the same effect and the same expected rise.",
+   ""
+  ],
+  [
+   "A frail 83-year-old on glipizide has had two episodes of hypoglycemia. Her HbA1c is 6.6%. What is the best plan?",
+   "Stop glipizide and accept an HbA1c below 8.0%",
+   "Reduce glipizide and keep the HbA1c below 7.0%",
+   "Switch to glyburide and keep the HbA1c below 7.5%",
+   "Add basal insulin and keep the HbA1c below 6.5%",
+   "Frail older adults need a relaxed goal and removal of the drug causing hypoglycemia. Reducing glipizide with a tight goal is the closest wrong option; it keeps both the risk and an unsuitable goal.",
+   ""
+  ],
+  [
+   "A woman with type 2 diabetes and hypertension on lisinopril plans pregnancy. Which change is best before conception?",
+   "Switch lisinopril to labetalol",
+   "Switch lisinopril to losartan",
+   "Switch lisinopril to aliskiren",
+   "Switch lisinopril to enalapril",
+   "All three wrong options block the renin-angiotensin system and are fetotoxic. Labetalol is a standard choice for hypertension in pregnancy.",
+   ""
+  ],
+  [
+   "A 36-year-old with no risk factors has a normal HbA1c on her first diabetes screen. When should screening be repeated?",
+   "Every 3 years",
+   "Every year",
+   "Every 5 years",
+   "Every 10 years",
+   "With normal results, ADA advises repeat testing at least every 3 years. Annual testing is for people with prediabetes.",
+   ""
+  ]
+ ],
+ "hypertension": [
+  [
+   "An adult has an average office blood pressure of 132/78 mmHg. How is it classified under ACC/AHA categories?",
+   "Stage 1 hypertension",
+   "Elevated blood pressure",
+   "Normal blood pressure",
+   "Stage 2 hypertension",
+   "Systolic 130 to 139 mmHg is stage 1 even when diastolic is below 80. Elevated is 120 to 129 systolic.",
+   ""
+  ],
+  [
+   "An adult has an average office blood pressure of 126/84 mmHg. How is it classified under ACC/AHA categories?",
+   "Stage 1 hypertension",
+   "Elevated blood pressure",
+   "Normal blood pressure",
+   "Stage 2 hypertension",
+   "Diastolic 80 to 89 mmHg is stage 1 whatever the systolic. Elevated blood pressure needs diastolic below 80, so the systolic of 126 alone would mislead.",
+   ""
+  ],
+  [
+   "A 59-year-old ran out of his medicines. He has a blood pressure of 192/116 mmHg, no symptoms, and a normal exam, ECG, creatinine and urinalysis. What is the best approach?",
+   "Restart oral therapy with follow-up within days",
+   "Admit for IV nicardipine, lowering by 25% in the first hour",
+   "Lower to below 140/90 mmHg within a few hours in clinic",
+   "Give sublingual nifedipine and recheck in 30 minutes",
+   "Without target-organ damage this is not an emergency, and rapid lowering can cause harm. IV therapy with a 25% first-hour reduction is the plan for a hypertensive emergency.",
+   ""
+  ],
+  [
+   "A patient has a hypertensive emergency with acute kidney injury and no aortic dissection. What is the blood pressure target in the first hour?",
+   "Reduce systolic pressure by no more than 25%",
+   "Reduce systolic pressure below 140 mmHg",
+   "Reduce systolic pressure by no more than 10%",
+   "Reduce systolic pressure by about 50%",
+   "Most emergencies call for a reduction of no more than 25% in the first hour, then gradual lowering. Faster drops risk organ hypoperfusion.",
+   ""
+  ],
+  [
+   "A patient has acute aortic dissection with a blood pressure of 188/104 mmHg. What is the blood pressure target?",
+   "Systolic below 120 mmHg within the first hour",
+   "Systolic reduced by no more than 25% in the first hour",
+   "Systolic below 140 mmHg within 6 hours",
+   "Systolic below 160 mmHg within 24 hours",
+   "Aortic dissection is the exception to the 25% rule: systolic pressure is lowered below 120 mmHg within the first hour.",
+   ""
+  ],
+  [
+   "A 52-year-old Black man has stage 1 hypertension without CKD, diabetes or heart failure. Which initial drug is preferred?",
+   "Chlorthalidone",
+   "Lisinopril",
+   "Losartan",
+   "Metoprolol",
+   "Thiazide-type diuretics and calcium channel blockers lower blood pressure more effectively as initial therapy in Black adults without CKD or heart failure. ACE inhibitors and ARBs are first-line in general but less effective alone in this group.",
+   ""
+  ],
+  [
+   "A 63-year-old with hypertension and CKD has a urine albumin-to-creatinine ratio of 450 mg/g. Which drug is preferred?",
+   "Lisinopril",
+   "Amlodipine",
+   "Chlorthalidone",
+   "Diltiazem",
+   "With albuminuria of 300 mg/g or more, an ACE inhibitor or ARB slows kidney disease. Amlodipine lowers blood pressure but does not reduce albuminuria.",
+   ""
+  ],
+  [
+   "A man on hydrochlorothiazide has recurrent gout. Which replacement both controls his blood pressure and lowers uric acid?",
+   "Losartan",
+   "Valsartan",
+   "Lisinopril",
+   "Chlorthalidone",
+   "Losartan has a mild uricosuric effect that other ARBs, such as valsartan, do not share. Chlorthalidone raises uric acid like hydrochlorothiazide.",
+   ""
+  ],
+  [
+   "A patient's blood pressure is uncontrolled on full doses of amlodipine, lisinopril and chlorthalidone, with good adherence and normal potassium. Which fourth drug is preferred?",
+   "Spironolactone",
+   "Doxazosin",
+   "Bisoprolol",
+   "Hydralazine",
+   "Spironolactone is the most effective fourth agent in resistant hypertension. Doxazosin and bisoprolol lower blood pressure less in this setting.",
+   ""
+  ],
+  [
+   "A 44-year-old with hypertension has a potassium of 3.1 mEq/L without a diuretic. How should screening for primary aldosteronism be done?",
+   "Correct the potassium, then measure the aldosterone-to-renin ratio",
+   "Measure the aldosterone-to-renin ratio while hypokalemic",
+   "Measure plasma aldosterone alone",
+   "Start with 24-hour urine aldosterone",
+   "Hypokalemia suppresses aldosterone and can give a falsely normal ratio, so potassium is corrected first. Testing while hypokalemic is the closest wrong option.",
+   ""
+  ],
+  [
+   "A 37-year-old has episodic headaches, sweating and palpitations with labile hypertension. Which first test is preferred?",
+   "Plasma free metanephrines",
+   "24-hour urine vanillylmandelic acid",
+   "Plasma catecholamines",
+   "MIBG scintigraphy",
+   "Plasma free (or urine fractionated) metanephrines are the most sensitive first test. VMA and plasma catecholamines are less sensitive, and imaging comes after biochemical confirmation.",
+   ""
+  ],
+  [
+   "A woman with chronic hypertension is 9 weeks pregnant and currently takes atenolol. Which drug is the best replacement?",
+   "Labetalol",
+   "Metoprolol",
+   "Losartan",
+   "Enalapril",
+   "Labetalol and nifedipine are preferred in pregnancy. Atenolol is linked to fetal growth restriction, and ACE inhibitors and ARBs are fetotoxic. Metoprolol is used but is not preferred over labetalol.",
+   ""
+  ],
+  [
+   "Under ACC/AHA guidance, which home blood pressure average corresponds to an office reading of 130/80 mmHg?",
+   "130/80 mmHg",
+   "135/85 mmHg",
+   "125/75 mmHg",
+   "120/80 mmHg",
+   "Home and daytime ambulatory averages of 130/80 mmHg correspond to the office threshold of 130/80 mmHg. 135/85 mmHg was the threshold under older guidance.",
+   ""
+  ],
+  [
+   "Which cuff bladder size gives an accurate office blood pressure?",
+   "A bladder that encircles at least 80% of the arm",
+   "A bladder that encircles at least 60% of the arm",
+   "A bladder that encircles at least 40% of the arm",
+   "A bladder that encircles the whole arm twice",
+   "The bladder should encircle at least 80% of the upper arm. A smaller cuff falsely raises the reading.",
+   ""
+  ],
+  [
+   "A patient on amlodipine, losartan and chlorthalidone has a rise in blood pressure after starting daily ibuprofen for knee pain. Which analgesic change is best?",
+   "Replace ibuprofen with acetaminophen",
+   "Replace ibuprofen with naproxen",
+   "Replace ibuprofen with celecoxib",
+   "Keep ibuprofen and add a fourth antihypertensive",
+   "All NSAIDs, including naproxen and celecoxib, raise blood pressure and blunt antihypertensive drugs. Acetaminophen avoids this effect.",
+   ""
+  ]
+ ],
+ "asthma": [
+  [
+   "A 25-year-old has asthma symptoms twice a month and no controller. Which reliever does GINA prefer?",
+   "As-needed low-dose budesonide-formoterol",
+   "As-needed albuterol alone",
+   "As-needed fluticasone-salmeterol",
+   "As-needed budesonide alone",
+   "GINA prefers as-needed ICS-formoterol because formoterol acts fast and the ICS reduces severe exacerbations. Salmeterol has a slow onset and is not used as a reliever; albuterol alone gives no anti-inflammatory effect.",
+   ""
+  ],
+  [
+   "An adult uses budesonide-formoterol 200/6 mcg as maintenance and reliever therapy. What is the maximum number of inhalations in one day?",
+   "12 inhalations",
+   "8 inhalations",
+   "6 inhalations",
+   "16 inhalations",
+   "GINA allows up to 12 inhalations of budesonide-formoterol 200/6 in a day (72 mcg formoterol). More than that signals poor control and needs review.",
+   ""
+  ],
+  [
+   "A 30-year-old has an FEV1 of 2.40 L that rises to 2.62 L after a bronchodilator. How should this be interpreted by the classic criterion?",
+   "Not significant: the rise is 9% and 220 mL",
+   "Significant: the rise is more than 200 mL",
+   "Significant: the rise is more than 5%",
+   "Not significant: the rise is below 300 mL",
+   "The classic criterion needs both at least 12% and at least 200 mL. A 220 mL rise from 2.40 L is about 9%, so only the volume condition is met.",
+   ""
+  ],
+  [
+   "During a severe asthma attack a tiring patient has a PaCO2 of 43 mmHg and a fall in respiratory rate. What does this suggest?",
+   "Impending respiratory failure",
+   "Improvement, because PaCO2 is normal",
+   "A mild attack with normal ventilation",
+   "Respiratory alkalosis from anxiety",
+   "In a severe attack PaCO2 is expected to be low from hyperventilation. A normal value in a tiring patient shows failing ventilation.",
+   ""
+  ],
+  [
+   "An adult has a severe asthma exacerbation that is not improving after initial bronchodilators. Which magnesium sulfate regimen does GINA describe?",
+   "2 g IV over 20 minutes",
+   "2 g IV push over 1 minute",
+   "4 g IV over 20 minutes",
+   "1 g intramuscularly",
+   "GINA describes a single 2 g IV infusion over 20 minutes. A rapid push can cause hypotension and flushing.",
+   ""
+  ],
+  [
+   "An adult is discharged after a moderate asthma exacerbation. Which oral corticosteroid course fits GINA?",
+   "Prednisolone 40 to 50 mg daily for 5 to 7 days",
+   "Prednisolone 40 to 50 mg daily for 14 days",
+   "Prednisolone 10 mg daily for 5 to 7 days",
+   "Prednisolone 40 to 50 mg daily with a 3-week taper",
+   "GINA recommends 40 to 50 mg daily, usually for 5 to 7 days, without a taper. Longer courses add side effects without extra benefit.",
+   ""
+  ],
+  [
+   "A patient with asthma had a myocardial infarction and now needs a beta-blocker. Which drug is most appropriate?",
+   "Bisoprolol",
+   "Propranolol",
+   "Carvedilol",
+   "Nadolol",
+   "Cardioselective beta-blockers such as bisoprolol are not contraindicated after an acute coronary syndrome in asthma. Propranolol, nadolol and carvedilol are non-selective and can cause bronchospasm.",
+   ""
+  ],
+  [
+   "A patient with severe asthma has blood eosinophils of 600 cells/microL, nasal polyps and no allergic sensitization on testing. Which biologic fits best?",
+   "Mepolizumab",
+   "Omalizumab",
+   "Infliximab",
+   "Rituximab",
+   "Mepolizumab targets IL-5 in eosinophilic asthma. Omalizumab is the closest wrong option, but it needs allergic sensitization and a suitable IgE level.",
+   ""
+  ],
+  [
+   "A patient with poorly controlled asthma has central bronchiectasis, total IgE of 2,400 IU/mL and Aspergillus sensitization. What is the diagnosis?",
+   "Allergic bronchopulmonary aspergillosis",
+   "Severe asthma with fungal sensitization",
+   "Chronic eosinophilic pneumonia",
+   "Invasive aspergillosis",
+   "Central bronchiectasis and IgE above 1,000 IU/mL with Aspergillus sensitization define ABPA. Severe asthma with fungal sensitization lacks bronchiectasis and a very high IgE.",
+   ""
+  ],
+  [
+   "A patient with asthma, chronic sinusitis and eosinophilia develops wrist drop and palpable purpura. What is the diagnosis?",
+   "Eosinophilic granulomatosis with polyangiitis",
+   "Allergic bronchopulmonary aspergillosis",
+   "Hypereosinophilic syndrome",
+   "Granulomatosis with polyangiitis",
+   "Asthma with eosinophilia, mononeuritis multiplex and vasculitic purpura fits EGPA. Granulomatosis with polyangiitis lacks asthma and eosinophilia.",
+   ""
+  ],
+  [
+   "Which boxed warning applies to montelukast?",
+   "Serious neuropsychiatric events",
+   "Serious asthma-related death",
+   "Severe hepatotoxicity",
+   "QT prolongation",
+   "Montelukast carries a boxed warning for neuropsychiatric events such as agitation, depression and suicidal thoughts. The asthma-death warning belonged to LABA monotherapy.",
+   ""
+  ],
+  [
+   "A patient with asthma, nasal polyps and wheezing after aspirin needs an analgesic for osteoarthritis. Which is generally best tolerated?",
+   "Celecoxib",
+   "Ibuprofen",
+   "Naproxen",
+   "Ketorolac",
+   "In aspirin-exacerbated respiratory disease, COX-1 inhibitors trigger reactions. Selective COX-2 inhibitors such as celecoxib are usually tolerated.",
+   ""
+  ],
+  [
+   "A woman with well-controlled asthma on budesonide becomes pregnant. What is the best advice?",
+   "Continue budesonide at the same dose",
+   "Stop budesonide during the first trimester",
+   "Replace budesonide with montelukast",
+   "Replace budesonide with oral prednisolone",
+   "Budesonide has the most safety data in pregnancy, and uncontrolled asthma is a greater risk to the fetus than the drug. Stopping in the first trimester is the closest wrong option.",
+   ""
+  ],
+  [
+   "A young woman has sudden episodes of stridor and throat tightness despite normal spirometry between episodes. What does the flow-volume loop show during an episode?",
+   "A flattened inspiratory loop",
+   "A flattened expiratory loop",
+   "A scooped expiratory curve",
+   "Flattening of both loops",
+   "Vocal cord dysfunction narrows the variable extrathoracic airway during inspiration, which flattens the inspiratory loop. A scooped expiratory curve is typical of asthma or COPD.",
+   ""
+  ],
+  [
+   "A patient's asthma is poorly controlled on low-dose ICS-formoterol. Before stepping up, what should be checked first?",
+   "Inhaler technique and adherence",
+   "Total serum IgE",
+   "Chest CT",
+   "Sputum culture",
+   "Poor technique and adherence are the most common causes of poor control and should be corrected before adding treatment.",
+   ""
+  ]
+ ],
+ "depression": [
+  [
+   "A patient scores 17 on the PHQ-9. How is this severity classified?",
+   "Moderately severe depression",
+   "Moderate depression",
+   "Severe depression",
+   "Mild depression",
+   "PHQ-9 bands are 5 to 9 mild, 10 to 14 moderate, 15 to 19 moderately severe and 20 to 27 severe.",
+   ""
+  ],
+  [
+   "A patient reached remission of a first major depressive episode on sertraline. How long should treatment continue after remission?",
+   "About 4 to 9 months",
+   "About 4 to 6 weeks",
+   "At least 2 years",
+   "Stop once remission is reached",
+   "Continuation for about 4 to 9 months after remission lowers relapse. Two years or more is for recurrent or chronic depression.",
+   ""
+  ],
+  [
+   "A 68-year-old needs citalopram for depression. What is the maximum daily dose?",
+   "20 mg",
+   "40 mg",
+   "30 mg",
+   "60 mg",
+   "Because of dose-related QT prolongation, the limit is 20 mg/day above age 60. 40 mg/day is the limit for younger adults.",
+   ""
+  ],
+  [
+   "A patient on fluoxetine who started tramadol has agitation, fever, hyperreflexia and inducible clonus. What is the diagnosis?",
+   "Serotonin syndrome",
+   "Neuroleptic malignant syndrome",
+   "Anticholinergic toxicity",
+   "Malignant hyperthermia",
+   "Clonus and hyperreflexia point to serotonin syndrome. Neuroleptic malignant syndrome has lead-pipe rigidity with slowed reflexes and develops over days.",
+   ""
+  ],
+  [
+   "A patient switches from fluoxetine to phenelzine, an MAO inhibitor. What washout is needed?",
+   "At least 5 weeks",
+   "At least 2 weeks",
+   "At least 1 week",
+   "At least 24 hours",
+   "Fluoxetine and its active metabolite have long half-lives, so 5 weeks are needed. Two weeks is enough for most other SSRIs.",
+   ""
+  ],
+  [
+   "After a tricyclic overdose a patient has a QRS of 140 ms and hypotension. What is the first drug for the conduction delay?",
+   "Sodium bicarbonate",
+   "Lidocaine",
+   "Procainamide",
+   "Flumazenil",
+   "Sodium bicarbonate counters sodium channel blockade and narrows the QRS. Lidocaine is a later option; procainamide worsens the block.",
+   ""
+  ],
+  [
+   "A 76-year-old started on sertraline 3 weeks ago is confused, with a sodium of 121 mEq/L and concentrated urine. What is the most likely cause?",
+   "SSRI-induced SIADH",
+   "Primary polydipsia",
+   "Diabetes insipidus",
+   "Adrenal insufficiency",
+   "SSRIs can cause SIADH, especially in older adults, with low sodium and inappropriately concentrated urine. Primary polydipsia gives dilute urine.",
+   ""
+  ],
+  [
+   "A 24-year-old with bulimia nervosa and depression asks for treatment. Which drug is best?",
+   "Fluoxetine",
+   "Bupropion",
+   "Mirtazapine",
+   "Trazodone",
+   "Fluoxetine is approved for bulimia and treats depression. Bupropion is contraindicated in bulimia because of seizure risk.",
+   ""
+  ],
+  [
+   "Under DSM-5, within what time after delivery must symptoms begin for depression with peripartum onset?",
+   "Within 4 weeks",
+   "Within 2 weeks",
+   "Within 6 months",
+   "Within 12 months",
+   "The DSM-5 specifier covers onset during pregnancy or within 4 weeks after delivery. Two weeks is the usual limit of postpartum blues.",
+   ""
+  ],
+  [
+   "A 15-year-old has had depressed or irritable mood most days for 14 months without full major depressive episodes. What diagnosis fits?",
+   "Persistent depressive disorder",
+   "Adjustment disorder",
+   "Disruptive mood dysregulation disorder",
+   "Normal adolescent moodiness",
+   "In children and adolescents, persistent depressive disorder needs only 1 year instead of 2, and mood may be irritable.",
+   ""
+  ],
+  [
+   "A patient has depression and once had 5 days of elevated mood, little sleep and overspending. Which treatment is best avoided?",
+   "Antidepressant monotherapy",
+   "A mood stabilizer",
+   "Psychotherapy",
+   "Quetiapine",
+   "This history suggests bipolar disorder, in which antidepressant monotherapy can trigger mania.",
+   ""
+  ],
+  [
+   "After 6 weeks on sertraline 50 mg, a patient has a partial response and no side effects. What is the best next step?",
+   "Increase the sertraline dose",
+   "Switch to a different drug class",
+   "Add lithium",
+   "Stop sertraline",
+   "A partial response at a low dose calls for dose optimization first. Switching or augmenting is for an adequate dose that fails.",
+   ""
+  ],
+  [
+   "A patient with depression has uncontrolled hypertension. Which antidepressant is most likely to raise blood pressure in a dose-related way?",
+   "Venlafaxine",
+   "Sertraline",
+   "Escitalopram",
+   "Mirtazapine",
+   "Venlafaxine raises blood pressure in a dose-related way through noradrenaline reuptake inhibition. SSRIs have little effect on blood pressure.",
+   ""
+  ],
+  [
+   "Days after stopping paroxetine abruptly, a patient has dizziness and electric shock sensations. What is the best management?",
+   "Restart paroxetine and taper slowly",
+   "Restart paroxetine at double the previous dose",
+   "Start a benzodiazepine for 2 weeks",
+   "Order brain MRI",
+   "This is discontinuation syndrome. Restarting and tapering slowly is standard. Doubling the old dose is unnecessary; the previous dose relieves symptoms and the taper then goes slowly.",
+   ""
+  ],
+  [
+   "Six weeks after her husband died, a woman has waves of sadness tied to reminders of him, with intact self-worth and no suicidal thoughts. What is the best management?",
+   "Support and follow-up",
+   "Start an SSRI now",
+   "Refer for electroconvulsive therapy",
+   "Admit for observation",
+   "Grief comes in waves tied to the loss and preserves self-esteem, unlike major depression. Follow-up can detect depression if it develops.",
+   ""
+  ]
+ ],
+ "prevention": [
+  [
+   "A 38-year-old has a father diagnosed with colorectal cancer at age 52. When should colonoscopy start, and how often?",
+   "At age 40, then every 5 years",
+   "At age 42, then every 5 years",
+   "At age 40, then every 10 years",
+   "At age 45, then every 10 years",
+   "Screening starts at 40 or 10 years before the relative's diagnosis, whichever is earlier: 40 comes before 42. The interval for this history is 5 years.",
+   ""
+  ],
+  [
+   "An average-risk 50-year-old has a positive FIT. What is the next step?",
+   "Diagnostic colonoscopy",
+   "Repeat FIT in 1 year",
+   "Repeat FIT now",
+   "CT colonography in 5 years",
+   "Any positive stool test needs follow-up colonoscopy. Repeating the FIT does not cancel a positive result.",
+   ""
+  ],
+  [
+   "A 35-year-old chooses cytology alone for cervical screening. What is the interval?",
+   "Every 3 years",
+   "Every 5 years",
+   "Every year",
+   "Every 2 years",
+   "Cytology alone is done every 3 years. The 5-year interval applies to primary HPV testing or co-testing.",
+   ""
+  ],
+  [
+   "A 24-year-old has normal cervical cytology. What is the recommended strategy until age 30?",
+   "Cytology alone every 3 years",
+   "Primary HPV testing every 5 years",
+   "Co-testing every 5 years",
+   "Cytology alone every year",
+   "Under USPSTF guidance, ages 21 to 29 are screened with cytology every 3 years. HPV-based strategies start at 30.",
+   ""
+  ],
+  [
+   "A 52-year-old with a 20 pack-year history quit smoking 14 years ago. What lung cancer screening is recommended?",
+   "Annual low-dose CT",
+   "No screening, because he quit more than 10 years ago",
+   "No screening, because he has fewer than 30 pack-years",
+   "Annual chest radiograph",
+   "Criteria are age 50 to 80, at least 20 pack-years and quitting within the past 15 years. 30 pack-years was the older threshold.",
+   ""
+  ],
+  [
+   "A 70-year-old woman who smoked for 25 years asks about abdominal aortic aneurysm screening. What does the USPSTF say?",
+   "The evidence is insufficient to recommend for or against",
+   "Screen once with ultrasound",
+   "Screen with ultrasound every 5 years",
+   "It recommends against screening",
+   "One-time screening is recommended for men 65 to 75 who have smoked. For women who have smoked the evidence is insufficient; the recommendation against applies to women who never smoked.",
+   ""
+  ],
+  [
+   "A healthy 70-year-old man asks about bone density screening. What does the USPSTF say?",
+   "The evidence is insufficient to recommend for or against",
+   "Screen once with DEXA",
+   "Screen with DEXA every 2 years",
+   "It recommends against screening",
+   "The USPSTF recommends screening women 65 and older, but finds the evidence insufficient for men.",
+   ""
+  ],
+  [
+   "A 42-year-old woman at average risk asks about mammography. What does the 2024 USPSTF statement recommend?",
+   "Mammography every 2 years",
+   "Mammography every year",
+   "Start mammography at age 50",
+   "Mammography every 3 years",
+   "The 2024 statement recommends biennial mammography from 40 to 74. Annual screening is not what the USPSTF recommends.",
+   ""
+  ],
+  [
+   "A 72-year-old man in good health asks for a PSA test. What does the USPSTF advise?",
+   "It recommends against routine screening",
+   "Decide together after discussing benefits and harms",
+   "Test every 2 years",
+   "Test every year",
+   "Shared decision-making applies from 55 to 69. From 70 the USPSTF recommends against routine PSA screening.",
+   ""
+  ],
+  [
+   "Which adults should be screened for hepatitis C at least once under USPSTF guidance?",
+   "All adults aged 18 to 79",
+   "All adults aged 15 to 65",
+   "Only adults with risk factors",
+   "All adults aged 50 to 75",
+   "One-time hepatitis C screening covers ages 18 to 79. Ages 15 to 65 is the range for HIV screening.",
+   ""
+  ],
+  [
+   "A 55-year-old asks about the recombinant zoster vaccine. Which schedule is correct?",
+   "Two doses, 2 to 6 months apart",
+   "One dose only",
+   "Three doses at 0, 1 and 6 months",
+   "Two doses, 12 months apart",
+   "Recombinant zoster vaccine is two doses given 2 to 6 months apart from age 50.",
+   ""
+  ],
+  [
+   "A 66-year-old received PCV15 today. If PPSV23 is added, when is it given in an immunocompetent adult?",
+   "At least 1 year later",
+   "At least 8 weeks later",
+   "At least 5 years later",
+   "It is never needed",
+   "After PCV15, PPSV23 follows at least 1 year later. The 8-week interval is for immunocompromised adults.",
+   ""
+  ],
+  [
+   "A pregnant woman had Tdap 3 years ago. When should she receive Tdap in this pregnancy?",
+   "At 27 to 36 weeks, in every pregnancy",
+   "Only if more than 10 years have passed since the last dose",
+   "Right after delivery",
+   "In the first trimester",
+   "Tdap is given at 27 to 36 weeks in every pregnancy, whatever the timing of earlier doses, to protect the newborn.",
+   ""
+  ],
+  [
+   "A 55-year-old with hypertension has a 10-year cardiovascular risk of 8.5%. What does the USPSTF recommend about a statin?",
+   "Offer it selectively after shared decision-making",
+   "Recommend it for everyone in this group",
+   "Recommend against it",
+   "Start a high-intensity statin",
+   "Risk of 10% or more with a risk factor gets a statin (grade B). Risk of 7.5% to below 10% gets a selective offer (grade C).",
+   ""
+  ],
+  [
+   "Which adults should receive hepatitis B vaccination without a risk assessment under current CDC guidance?",
+   "All adults aged 19 to 59",
+   "Only health care workers",
+   "Only adults with diabetes",
+   "All adults aged 60 and older",
+   "Vaccination is universal from 19 to 59. Adults 60 and older with risk factors should be vaccinated, and others may be.",
+   ""
+  ]
+ ]
+};
+
+  function expertItem(item, reference) {
+    var q = { question: item[0], options: item.slice(1, 5), correct_index: 0, explanation: item[5] };
+    if (item[6]) q.source_quote = item[6];
+    else if (reference) q.reference = reference;
+    return q;
+  }
+  TOPICS[0].levels.expert = EXPERT.sle.map(function (item) { return expertItem(item); });
+
   ORIGINAL_TOPICS.forEach(function (topic) {
     var levels = {};
     ['easy', 'medium', 'hard'].forEach(function (key) {
@@ -427,6 +1262,7 @@
         };
       });
     });
+    levels.expert = (EXPERT[topic.id] || []).map(function (item) { return expertItem(item, topic.reference); });
     TOPICS.push({ id: topic.id, title: topic.title, levels: levels });
   });
 
