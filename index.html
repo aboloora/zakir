@@ -1408,38 +1408,6 @@
     return inner;
   }
 
-  // ===== الحسابات: تُحفظ في هذا المتصفح فقط =====
-  var ACCOUNTS_KEY = 'zakir.page.accounts';
-  function loadAccounts() {
-    try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; } catch (error) { return {}; }
-  }
-  function saveAccounts(accounts) {
-    try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); return true; } catch (error) { return false; }
-  }
-  function accountKey(username) { return username.trim().toLowerCase(); }
-  function toHex(buffer) {
-    return Array.prototype.map.call(new Uint8Array(buffer), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
-  }
-  function randomBytes(length) {
-    var bytes = new Uint8Array(length);
-    window.crypto.getRandomValues(bytes);
-    return bytes;
-  }
-  function canSha() { return !!(window.crypto && crypto.subtle && window.TextEncoder); }
-  function fnvHash(text) {
-    var h = 0x811c9dc5;
-    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-    return h.toString(16);
-  }
-  // كلمة المرور لا تُحفظ نصًا، بل بصمتها (hash) مع ملح عشوائي.
-  function hashPassword(password, salt, method) {
-    var text = salt + ':' + password;
-    if (method === 'sha256' && canSha()) {
-      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(toHex);
-    }
-    return Promise.resolve(fnvHash(text));
-  }
-
   var ICONS = {
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
@@ -1517,14 +1485,19 @@
     return function (message) { box.textContent = message || ''; box.hidden = !message; };
   }
 
-  // isNew = عضو سجّل للتو: يُرسل اسم المستخدم مع الاسم والبريد إلى ورقة "بيانات المستخدمين".
-  function finishLogin(account, remember, isNew) {
-    state.user = { name: account.name, email: account.email, username: account.username };
+  // الحسابات محفوظة في Google Sheet (ورقة "بيانات المستخدمين")، والتحقق منها يتم هناك.
+  // يعيد رسالة خطأ واضحة، أو null عند النجاح.
+  function accountError(data) {
+    if (!data) return 'تعذّر الاتصال بقاعدة البيانات. تحقق من الإنترنت وحاول مرة أخرى.';
+    if (data.ok) return null;
+    if (data.error === 'bad email') return 'قاعدة البيانات لم تُحدَّث بعد: يجب نشر النسخة الجديدة من Apps Script.';
+    if (data.error === 'locked') return 'محاولات دخول خاطئة كثيرة. انتظر 15 دقيقة ثم حاول مرة أخرى.';
+    return '';
+  }
+  function finishLogin(data, remember) {
+    state.user = { name: data.user.name, email: data.user.email, username: data.user.username };
     saveUser(remember ? state.user : null);
-    state.historyRequest = postToSheet({
-      action: 'login', name: account.name, email: account.email, username: account.username,
-      isNew: !!isNew, page: location.href
-    });
+    state.historyRequest = Promise.resolve(data);
     showTopics();
   }
 
@@ -1565,23 +1538,17 @@
       password.setError(passValue ? '' : 'اكتب كلمة المرور.');
       if (!nameValue) { username.input.focus(); return; }
       if (!passValue) { password.input.focus(); return; }
-      var account = loadAccounts()[accountKey(nameValue)];
-      if (!account) {
-        showAlert('اسم المستخدم غير مسجّل على هذا الجهاز. اضغط أيقونة «عضوية جديدة» لإنشاء حساب.');
-        return;
-      }
+      if (!sheetReady()) { showAlert('قاعدة البيانات غير متصلة: رابط Apps Script غير صحيح.'); return; }
       loginBtn.disabled = true;
-      hashPassword(passValue, account.salt, account.method).then(function (hash) {
+      loginBtn.textContent = 'جارٍ التحقق…';
+      postToSheet({ action: 'signin', username: nameValue, password: passValue }).then(function (data) {
         loginBtn.disabled = false;
-        if (hash !== account.hash) {
-          password.setError('كلمة المرور غير صحيحة.');
-          password.input.focus();
-          return;
-        }
-        finishLogin(account, remember.input.checked);
-      }, function () {
-        loginBtn.disabled = false;
-        showAlert('تعذّر التحقق من كلمة المرور في هذا المتصفح.');
+        loginBtn.textContent = 'دخول';
+        var problem = accountError(data);
+        if (problem === null) { finishLogin(data, remember.input.checked); return; }
+        if (problem) { showAlert(problem); return; }
+        showAlert('اسم المستخدم أو كلمة المرور غير صحيحة. إذا لم يكن لديك حساب، اضغط أيقونة «عضوية جديدة».');
+        password.input.focus();
       });
     }
 
@@ -1628,7 +1595,7 @@
       var passValue = password.input.value;
       var errors = [
         [fullName, nameValue.length >= 2 ? '' : 'اكتب اسمك (حرفان على الأقل).'],
-        [username, /^\S{3,30}$/.test(userValue) ? (loadAccounts()[accountKey(userValue)] ? 'اسم المستخدم مستخدم من قبل على هذا الجهاز.' : '') : 'اسم المستخدم من 3 إلى 30 حرفًا بدون مسافات.'],
+        [username, /^\S{3,30}$/.test(userValue) ? '' : 'اسم المستخدم من 3 إلى 30 حرفًا بدون مسافات.'],
         [email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? '' : 'اكتب بريدًا إلكترونيًا صحيحًا.'],
         [password, passValue.length >= 6 ? '' : 'كلمة المرور 6 أحرف على الأقل.'],
         [confirm, confirm.input.value === passValue ? '' : 'كلمتا المرور غير متطابقتين.']
@@ -1640,19 +1607,21 @@
       });
       if (first) { first.input.focus(); return; }
 
+      if (!sheetReady()) { showAlert('قاعدة البيانات غير متصلة: رابط Apps Script غير صحيح.'); return; }
       createBtn.disabled = true;
-      var method = canSha() ? 'sha256' : 'fnv';
-      var salt = toHex(randomBytes(16));
-      var account = { name: nameValue, username: userValue, email: emailValue, salt: salt, method: method };
-      hashPassword(passValue, salt, method).then(function (hash) {
-        account.hash = hash;
-        var accounts = loadAccounts();
-        accounts[accountKey(userValue)] = account;
-        saveAccounts(accounts);
-        finishLogin(account, true, true);
-      }, function () {
+      createBtn.textContent = 'جارٍ إنشاء الحساب…';
+      postToSheet({
+        action: 'register', name: nameValue, username: userValue, email: emailValue,
+        password: passValue, page: location.href
+      }).then(function (data) {
         createBtn.disabled = false;
-        showAlert('تعذّر إنشاء الحساب في هذا المتصفح. حاول مرة أخرى.');
+        createBtn.textContent = 'إنشاء الحساب';
+        var problem = accountError(data);
+        if (problem === null) { finishLogin(data, true); return; }
+        if (problem) { showAlert(problem); return; }
+        if (data.error === 'username_taken') { username.setError('اسم المستخدم محجوز. اختر اسمًا آخر.'); username.input.focus(); return; }
+        if (data.error === 'email_taken') { email.setError('هذا البريد مسجّل بحساب آخر. سجّل الدخول باسم المستخدم الخاص به.'); email.input.focus(); return; }
+        showAlert('تحقق من البيانات المدخلة وحاول مرة أخرى.');
       });
     }
 
