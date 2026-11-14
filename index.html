@@ -83,8 +83,38 @@
 #zakir-app .z-history-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; }
 #zakir-app .z-history-score { color: var(--z-accent); font-weight: 700; }
 #zakir-app .z-history-meta { font-size: .88rem; }
+/* شاشتا تسجيل الدخول والعضوية الجديدة */
+#zakir-app .z-login { max-width: 28rem; padding: 1.75rem 1.5rem; }
+#zakir-app .z-login-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+#zakir-app .z-login-top h1 { margin-bottom: .25rem; }
+#zakir-app .z-login-top .z-brand { display: block; margin-bottom: .35rem; font-size: 1rem; }
+#zakir-app .z-reg { display: flex; flex-direction: column; align-items: center; gap: .2rem; flex-shrink: 0; }
+#zakir-app .z-reg-label { color: var(--z-muted); font-size: .8rem; font-weight: 500; }
+#zakir-app .z-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; margin: 0; padding: 0; background: var(--z-soft); color: var(--z-accent); border: 1.5px solid var(--z-accent); border-radius: 50%; cursor: pointer; }
+#zakir-app .z-icon-btn:hover { background: var(--z-accent); color: #fff; }
+#zakir-app .z-back { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem; margin: 0; padding: 0; background: var(--z-surface); color: var(--z-ink); border: 1px solid var(--z-line); border-radius: 6px; cursor: pointer; }
+#zakir-app .z-back:hover { background: var(--z-soft); }
+#zakir-app .z-reg-top { justify-content: flex-start; align-items: center; }
+#zakir-app .z-ico { display: inline-flex; line-height: 0; }
+#zakir-app .z-ico svg { width: 1.25rem; height: 1.25rem; }
+#zakir-app .z-input-wrap { position: relative; }
+#zakir-app .z-input-wrap input { padding-inline-start: 2.6rem; }
+#zakir-app .z-input-wrap.z-has-toggle input { padding-inline-end: 3rem; }
+#zakir-app .z-input-lead { position: absolute; inset-inline-start: .8rem; top: 50%; transform: translateY(-50%); color: var(--z-muted); pointer-events: none; }
+#zakir-app .z-eye { position: absolute; inset-inline-end: .15rem; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; margin: 0; padding: 0; background: transparent; color: var(--z-muted); border: 0; border-radius: 6px; cursor: pointer; }
+#zakir-app .z-eye:hover { color: var(--z-ink); }
+#zakir-app .z-check { display: flex; align-items: center; gap: .55rem; margin: 0 0 1rem; color: var(--z-muted); font-size: .95rem; cursor: pointer; }
+#zakir-app .z-check input { flex-shrink: 0; width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--z-accent); }
+#zakir-app .z-login .z-primary.z-block { min-height: 3rem; font-size: 1.05rem; }
+#zakir-app .z-alert { margin-bottom: 1rem; padding: .6rem .8rem; background: var(--z-wrong-soft); color: var(--z-wrong); border-radius: 6px; font-size: .92rem; }
+#zakir-app .z-switch { margin-top: 1.1rem; color: var(--z-muted); font-size: .95rem; text-align: center; }
+#zakir-app .z-switch .z-link { margin: 0; font-weight: 700; }
+#zakir-app .z-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .75rem; }
 @media (max-width: 560px) {
   #zakir-app .z-level { grid-template-columns: 1fr; gap: .25rem; }
+}
+@media (max-width: 420px) {
+  #zakir-app .z-two { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -1378,58 +1408,257 @@
     return inner;
   }
 
-  // Page 1
+  // ===== الحسابات: تُحفظ في هذا المتصفح فقط =====
+  var ACCOUNTS_KEY = 'zakir.page.accounts';
+  function loadAccounts() {
+    try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; } catch (error) { return {}; }
+  }
+  function saveAccounts(accounts) {
+    try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); return true; } catch (error) { return false; }
+  }
+  function accountKey(username) { return username.trim().toLowerCase(); }
+  function toHex(buffer) {
+    return Array.prototype.map.call(new Uint8Array(buffer), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+  function randomBytes(length) {
+    var bytes = new Uint8Array(length);
+    window.crypto.getRandomValues(bytes);
+    return bytes;
+  }
+  function canSha() { return !!(window.crypto && crypto.subtle && window.TextEncoder); }
+  function fnvHash(text) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(16);
+  }
+  // كلمة المرور لا تُحفظ نصًا، بل بصمتها (hash) مع ملح عشوائي.
+  function hashPassword(password, salt, method) {
+    var text = salt + ':' + password;
+    if (method === 'sha256' && canSha()) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(toHex);
+    }
+    return Promise.resolve(fnvHash(text));
+  }
+
+  var ICONS = {
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+    id: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M6 16a3 3 0 0 1 6 0"/><path d="M15 9h3"/><path d="M15 13h3"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9"/><path d="M6.6 6.6C3.9 8.4 2 12 2 12s4 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg>',
+    userPlus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>'
+  };
+  function icon(name, className) {
+    var span = el('span', 'z-ico' + (className ? ' ' + className : ''));
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML = ICONS[name];
+    return span;
+  }
+
+  // حقل إدخال بأيقونة، ومع زر إظهار كلمة المرور عند الحاجة.
+  function inputField(parent, opts, onEnter) {
+    var wrap = el('div', 'z-field');
+    var label = el('label', '', opts.label);
+    label.htmlFor = opts.id;
+    var box = el('div', 'z-input-wrap' + (opts.type === 'password' ? ' z-has-toggle' : ''));
+    var input = el('input');
+    input.id = opts.id;
+    input.type = opts.type;
+    if (opts.autocomplete) input.autocomplete = opts.autocomplete;
+    if (opts.placeholder) input.placeholder = opts.placeholder;
+    if (opts.dir) input.dir = opts.dir;
+    box.appendChild(input);
+    box.appendChild(icon(opts.icon, 'z-input-lead'));
+    if (opts.type === 'password') {
+      var eye = button('z-eye', undefined, function () {
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        eye.textContent = '';
+        eye.appendChild(icon(show ? 'eyeOff' : 'eye'));
+        eye.setAttribute('aria-label', show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+      });
+      eye.setAttribute('aria-label', 'إظهار كلمة المرور');
+      eye.appendChild(icon('eye'));
+      box.appendChild(eye);
+    }
+    var error = el('p', 'z-error');
+    error.hidden = true;
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { event.preventDefault(); onEnter(); }
+    });
+    wrap.appendChild(label);
+    wrap.appendChild(box);
+    wrap.appendChild(error);
+    parent.appendChild(wrap);
+    return { input: input, setError: function (message) {
+      error.textContent = message;
+      error.hidden = !message;
+      input.setAttribute('aria-invalid', message ? 'true' : 'false');
+    } };
+  }
+  function checkbox(parent, text, checked) {
+    var label = el('label', 'z-check');
+    var input = el('input');
+    input.type = 'checkbox';
+    input.checked = !!checked;
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(text));
+    parent.appendChild(label);
+    return { label: label, input: input };
+  }
+  function alertBox(parent) {
+    var box = el('p', 'z-alert');
+    box.setAttribute('role', 'alert');
+    box.hidden = true;
+    parent.appendChild(box);
+    return function (message) { box.textContent = message || ''; box.hidden = !message; };
+  }
+
+  // isNew = عضو سجّل للتو: يُرسل اسم المستخدم مع الاسم والبريد إلى ورقة "بيانات المستخدمين".
+  function finishLogin(account, remember, isNew) {
+    state.user = { name: account.name, email: account.email, username: account.username };
+    saveUser(remember ? state.user : null);
+    state.historyRequest = postToSheet({
+      action: 'login', name: account.name, email: account.email, username: account.username,
+      isNew: !!isNew, page: location.href
+    });
+    showTopics();
+  }
+
+  // Page 1: تسجيل الدخول
   function showLogin() {
     var root = screen(1);
     var card = el('div', 'z-card z-login');
-    card.appendChild(el('h1', 'z-brand', 'ذاكِر'));
-    card.appendChild(el('p', 'z-muted', 'سجّل دخولك لبدء الاختبار.'));
 
-    function field(id, labelText, type) {
-      var wrap = el('div', 'z-field');
-      var label = el('label', '', labelText);
-      label.htmlFor = id;
-      var input = el('input');
-      input.id = id;
-      input.type = type;
-      var error = el('p', 'z-error');
-      error.hidden = true;
-      input.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') { event.preventDefault(); submit(); }
-      });
-      wrap.appendChild(label);
-      wrap.appendChild(input);
-      wrap.appendChild(error);
-      card.appendChild(wrap);
-      return { input: input, setError: function (message) {
-        error.textContent = message;
-        error.hidden = !message;
-        input.setAttribute('aria-invalid', message ? 'true' : 'false');
-      } };
-    }
+    var top = el('div', 'z-login-top');
+    var titles = el('div');
+    titles.appendChild(el('span', 'z-brand', 'ذاكِر'));
+    titles.appendChild(el('h1', '', 'تسجيل الدخول'));
+    titles.appendChild(el('p', 'z-muted', 'مرحبًا بعودتك، أدخل بياناتك لبدء الاختبار.'));
+    top.appendChild(titles);
+    var reg = el('div', 'z-reg');
+    var regBtn = button('z-icon-btn', undefined, showRegister);
+    regBtn.setAttribute('aria-label', 'تسجيل عضوية جديدة');
+    regBtn.title = 'تسجيل عضوية جديدة';
+    regBtn.appendChild(icon('userPlus'));
+    reg.appendChild(regBtn);
+    reg.appendChild(el('span', 'z-reg-label', 'عضوية جديدة'));
+    top.appendChild(reg);
+    card.appendChild(top);
 
-    var name = field('zakir-name', 'الاسم', 'text');
-    name.input.autocomplete = 'name';
-    var email = field('zakir-email', 'البريد الإلكتروني', 'email');
-    email.input.autocomplete = 'email';
-    email.input.dir = 'ltr';
+    var showAlert = alertBox(card);
+    var username = inputField(card, { id: 'zakir-username', label: 'اسم المستخدم', type: 'text', icon: 'user', autocomplete: 'username', placeholder: 'أدخل اسم المستخدم' }, submit);
+    var password = inputField(card, { id: 'zakir-password', label: 'كلمة المرور', type: 'password', icon: 'lock', autocomplete: 'current-password', placeholder: 'أدخل كلمة المرور' }, submit);
+    var remember = checkbox(card, 'تذكرني على هذا الجهاز', true);
+
+    var loginBtn = button('z-btn z-primary z-block', 'دخول', submit);
+    card.appendChild(loginBtn);
 
     function submit() {
-      var nameValue = name.input.value.trim();
-      var emailValue = email.input.value.trim();
-      var nameError = nameValue.length >= 2 ? '' : 'اكتب اسمك (حرفان على الأقل).';
-      var emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? '' : 'اكتب بريدًا إلكترونيًا صحيحًا.';
-      name.setError(nameError);
-      email.setError(emailError);
-      if (nameError) { name.input.focus(); return; }
-      if (emailError) { email.input.focus(); return; }
-      state.user = { name: nameValue, email: emailValue };
-      saveUser(state.user);
-      state.historyRequest = postToSheet({ action: 'login', name: nameValue, email: emailValue, page: location.href });
-      showTopics();
+      showAlert('');
+      var nameValue = username.input.value.trim();
+      var passValue = password.input.value;
+      username.setError(nameValue ? '' : 'اكتب اسم المستخدم.');
+      password.setError(passValue ? '' : 'اكتب كلمة المرور.');
+      if (!nameValue) { username.input.focus(); return; }
+      if (!passValue) { password.input.focus(); return; }
+      var account = loadAccounts()[accountKey(nameValue)];
+      if (!account) {
+        showAlert('اسم المستخدم غير مسجّل على هذا الجهاز. اضغط أيقونة «عضوية جديدة» لإنشاء حساب.');
+        return;
+      }
+      loginBtn.disabled = true;
+      hashPassword(passValue, account.salt, account.method).then(function (hash) {
+        loginBtn.disabled = false;
+        if (hash !== account.hash) {
+          password.setError('كلمة المرور غير صحيحة.');
+          password.input.focus();
+          return;
+        }
+        finishLogin(account, remember.input.checked);
+      }, function () {
+        loginBtn.disabled = false;
+        showAlert('تعذّر التحقق من كلمة المرور في هذا المتصفح.');
+      });
     }
 
-    card.appendChild(button('z-btn z-primary z-block', 'دخول', submit));
+    var sw = el('p', 'z-switch', 'ليس لديك حساب؟ ');
+    sw.appendChild(button('z-link', 'أنشئ عضوية جديدة', showRegister));
+    card.appendChild(sw);
+    card.appendChild(el('p', 'z-hint', 'يُسجَّل الاسم والبريد لدى إدارة الموقع لمتابعة المشاركين.'));
+    root.appendChild(card);
+  }
+
+  // Page 1ب: عضوية جديدة
+  function showRegister() {
+    var root = screen(1);
+    var card = el('div', 'z-card z-login');
+
+    var top = el('div', 'z-login-top z-reg-top');
+    var back = button('z-back', undefined, showLogin);
+    back.setAttribute('aria-label', 'العودة إلى تسجيل الدخول');
+    back.appendChild(icon('back'));
+    top.appendChild(back);
+    var titles = el('div');
+    titles.appendChild(el('h1', '', 'عضوية جديدة'));
+    titles.appendChild(el('p', 'z-muted', 'أنشئ حسابك في أقل من دقيقة.'));
+    top.appendChild(titles);
+    card.appendChild(top);
+
+    var showAlert = alertBox(card);
+    var fullName = inputField(card, { id: 'zakir-name', label: 'الاسم الكامل', type: 'text', icon: 'id', autocomplete: 'name', placeholder: 'مثال: محمد أحمد' }, submit);
+    var username = inputField(card, { id: 'zakir-new-username', label: 'اسم المستخدم', type: 'text', icon: 'user', autocomplete: 'username', placeholder: 'بدون مسافات، 3 أحرف على الأقل' }, submit);
+    var email = inputField(card, { id: 'zakir-email', label: 'البريد الإلكتروني', type: 'email', icon: 'mail', autocomplete: 'email', placeholder: 'name@example.com', dir: 'ltr' }, submit);
+    var two = el('div', 'z-two');
+    card.appendChild(two);
+    var password = inputField(two, { id: 'zakir-new-password', label: 'كلمة المرور', type: 'password', icon: 'lock', autocomplete: 'new-password', placeholder: '6 أحرف على الأقل' }, submit);
+    var confirm = inputField(two, { id: 'zakir-confirm-password', label: 'تأكيد كلمة المرور', type: 'password', icon: 'lock', autocomplete: 'new-password', placeholder: 'أعد كتابتها' }, submit);
+
+    var createBtn = button('z-btn z-primary z-block', 'إنشاء الحساب', submit);
+    card.appendChild(createBtn);
+
+    function submit() {
+      showAlert('');
+      var nameValue = fullName.input.value.trim();
+      var userValue = username.input.value.trim();
+      var emailValue = email.input.value.trim();
+      var passValue = password.input.value;
+      var errors = [
+        [fullName, nameValue.length >= 2 ? '' : 'اكتب اسمك (حرفان على الأقل).'],
+        [username, /^\S{3,30}$/.test(userValue) ? (loadAccounts()[accountKey(userValue)] ? 'اسم المستخدم مستخدم من قبل على هذا الجهاز.' : '') : 'اسم المستخدم من 3 إلى 30 حرفًا بدون مسافات.'],
+        [email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? '' : 'اكتب بريدًا إلكترونيًا صحيحًا.'],
+        [password, passValue.length >= 6 ? '' : 'كلمة المرور 6 أحرف على الأقل.'],
+        [confirm, confirm.input.value === passValue ? '' : 'كلمتا المرور غير متطابقتين.']
+      ];
+      var first = null;
+      errors.forEach(function (pair) {
+        pair[0].setError(pair[1]);
+        if (pair[1] && !first) first = pair[0];
+      });
+      if (first) { first.input.focus(); return; }
+
+      createBtn.disabled = true;
+      var method = canSha() ? 'sha256' : 'fnv';
+      var salt = toHex(randomBytes(16));
+      var account = { name: nameValue, username: userValue, email: emailValue, salt: salt, method: method };
+      hashPassword(passValue, salt, method).then(function (hash) {
+        account.hash = hash;
+        var accounts = loadAccounts();
+        accounts[accountKey(userValue)] = account;
+        saveAccounts(accounts);
+        finishLogin(account, true, true);
+      }, function () {
+        createBtn.disabled = false;
+        showAlert('تعذّر إنشاء الحساب في هذا المتصفح. حاول مرة أخرى.');
+      });
+    }
+
+    var sw = el('p', 'z-switch', 'لديك حساب بالفعل؟ ');
+    sw.appendChild(button('z-link', 'سجّل الدخول', showLogin));
+    card.appendChild(sw);
     card.appendChild(el('p', 'z-hint', 'يُسجَّل الاسم والبريد لدى إدارة الموقع لمتابعة المشاركين.'));
     root.appendChild(card);
   }
